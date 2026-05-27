@@ -209,9 +209,11 @@ services:
         sync: false
 ```
 
-### Cold start mitigation
+### Cold start / spin-down mitigation
 
-Render free tier sleeps after 15 min idle. UptimeRobot pings `/api/health` every 14 min — this runs 24/7 regardless of whether anyone is using the site. Pause/resume the monitor manually before and after a party, or upgrade to Render paid ($7/mo) to skip this entirely.
+Render free tier sleeps after 15 min with no HTTP requests. WebSocket connections (even active ones) do not reset this timer. At a 30-min spin interval, the server can spin down mid-game and lose all in-memory state.
+
+**Solution: host screen self-ping.** `HostView.vue` runs a `setInterval` every 10 minutes that calls `GET /api/rooms/{code}`. This keeps Render warm only while the party is active, needs no external service, and acts as a connectivity check (redirect to error if the room is gone). Interval started in `onMounted`, cleared in `onUnmounted`.
 
 ### Disconnection handling
 
@@ -240,6 +242,7 @@ Players who disconnect are **not removed from the wheel** — their name stays a
 ### Phase 3 — Host view (big screen)
 - HomeView (create game, show QR code)
 - HostView: SpinWheel ×2, CountdownBar, ActiveRules, PlayerList
+- Self-ping: `setInterval` in `onMounted` calling `GET /api/rooms/{code}` every 10 min, cleared in `onUnmounted`
 - WebSocket integration in gameStore
 
 ### Phase 4 — Player view (mobile)
