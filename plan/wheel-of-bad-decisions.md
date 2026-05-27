@@ -266,6 +266,59 @@ Avoids CORS complexity, one deployment to manage, Vue dist folder served from Sp
 
 ---
 
+## Project Layout
+
+Single Maven project. The Vue frontend lives in `frontend/` at the project root. Docker builds both in separate stages and copies Vue's `dist/` into `src/main/resources/static/` before compiling the JAR. Spring Boot serves everything from that static path.
+
+```
+wheel-of-bad-decisions/
+├── pom.xml
+├── Dockerfile
+├── render.yaml
+├── frontend/                              # Vue 3 + TypeScript (Vite)
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tsconfig.json
+│   ├── public/
+│   │   └── sounds/
+│   │       ├── drumroll.mp3
+│   │       ├── airhorn.mp3
+│   │       └── tick.mp3
+│   └── src/                               # (see Frontend Structure below)
+└── src/                                   # Spring Boot
+    ├── main/
+    │   ├── java/com/remstem/game/         # (see Backend Structure below)
+    │   └── resources/
+    │       ├── application.yml
+    │       ├── static/                    # Vue dist copied here at build time
+    │       └── content/
+    │           ├── truths.json
+    │           ├── dares.json
+    │           ├── challenges.json
+    │           ├── hotseat.json
+    │           └── mostlikelyto.json
+    └── test/
+        └── java/com/remstem/game/
+```
+
+### application.yml (key entries)
+
+```yaml
+server:
+  port: ${PORT:8080}
+
+spring:
+  web:
+    resources:
+      static-locations: classpath:/static/
+
+game:
+  spin-warning-seconds: 5
+```
+
+---
+
 ## Backend Structure
 
 ```
@@ -541,9 +594,35 @@ Confetti plays on page load. "Play again" button creates a new room.
 
 ## Deployment — Render
 
-### Build strategy (single service)
+### Build strategy (single service, Docker)
 
-Maven `frontend-maven-plugin` builds Vue during `mvn package` and copies `dist/` into `src/main/resources/static/`. Spring Boot serves everything.
+Multi-stage Dockerfile. No Maven frontend plugin needed — Node and Maven run in separate build stages; the final image is a slim JRE + JAR only.
+
+```dockerfile
+# Stage 1 — build Vue frontend
+FROM node:20-alpine AS frontend
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
+# Stage 2 — build Spring Boot JAR
+FROM maven:3.9-eclipse-temurin-21 AS backend
+WORKDIR /app
+COPY pom.xml ./
+RUN mvn dependency:go-offline -q
+COPY src/ ./src/
+COPY --from=frontend /app/frontend/dist ./src/main/resources/static/
+RUN mvn package -DskipTests -q
+
+# Stage 3 — runtime
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY --from=backend /app/target/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
 
 ### Render config (`render.yaml`)
 
@@ -551,9 +630,7 @@ Maven `frontend-maven-plugin` builds Vue during `mvn package` and copies `dist/`
 services:
   - type: web
     name: wheel-of-bad-decisions
-    env: java
-    buildCommand: mvn package -DskipTests
-    startCommand: java -jar target/game-*.jar
+    env: docker
     envVars:
       - key: PORT
         sync: false
@@ -579,9 +656,9 @@ Players who disconnect are **not removed from the wheel** — their name stays a
 - Tailwind CSS configured in Vite
 - Google Font: Fredoka One + Nunito loaded via `index.html`
 - `canvas-confetti` npm package added
-- Sound assets: `drumroll.mp3`, `airhorn.mp3`, `tick.mp3` placed in `public/sounds/`
-- Maven frontend plugin wiring
-- `render.yaml`
+- Sound assets: `drumroll.mp3`, `airhorn.mp3`, `tick.mp3` placed in `frontend/public/sounds/`
+- `Dockerfile` (multi-stage: node → maven → jre-alpine)
+- `render.yaml` (`env: docker`)
 
 ### Phase 2 — Core backend
 - Room + Player models
