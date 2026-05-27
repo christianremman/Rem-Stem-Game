@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Host Active — Wheel of Bad Decisions</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: #FFF9E6; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  .fredoka { font-family: 'Fredoka One', cursive; }
+
+  header { background: white; border-bottom: 3px solid black; padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .room-pill { background: #FBBF24; border: 2px solid black; border-radius: 8px; padding: 4px 14px; font-family: 'Fredoka One', cursive; font-size: 1.2rem; letter-spacing: 0.1em; box-shadow: 2px 2px 0 black; }
+  .icon-btn { background: white; border: 2px solid black; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 1.1rem; box-shadow: 2px 2px 0 black; transition: all 0.1s; }
+  .icon-btn:hover { transform: translate(1px,1px); box-shadow: 1px 1px 0 black; }
+
+  .countdown-bar-wrap { height: 8px; background: #E5E7EB; flex-shrink: 0; }
+  #countdown-bar { height: 100%; width: 52%; background: linear-gradient(90deg, #22C55E, #FBBF24); transition: width 1s linear; }
+
+  main { flex: 1; display: flex; gap: 0; overflow: hidden; }
+  .wheels-area { flex: 1; display: flex; align-items: center; justify-content: center; gap: 48px; padding: 16px; }
+  .wheel-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .wheel-label { font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: #374151; }
+
+  .wheel-wrap { position: relative; }
+  .wheel-svg { display: block; filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.35)); }
+  .wheel-group { transform-origin: 150px 150px; transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99); }
+
+  /* Pointer */
+  .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0;
+    border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 30px solid black;
+    filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.4)); z-index: 10; }
+
+  .rules-bar { background: #1F2937; color: white; padding: 8px 24px; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+  .rules-bar span { color: #FBBF24; font-family: 'Fredoka One', cursive; }
+
+  /* Countdown time display */
+  .time-display { font-family: 'Fredoka One', cursive; font-size: 2rem; color: #374151; }
+
+  /* Sidebar */
+  #sidebar { width: 220px; background: white; border-left: 3px solid black; overflow-y: auto; padding: 16px; flex-shrink: 0; transition: width 0.3s; }
+  #sidebar.hidden { width: 0; padding: 0; overflow: hidden; }
+  .player-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #F3F4F6; }
+  .player-dot { width: 10px; height: 10px; border-radius: 50%; background: #22C55E; display: inline-block; margin-right: 8px; }
+  .player-dot.away { background: #F59E0B; }
+
+  /* Result overlay */
+  #result-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 100; pointer-events: none; }
+  #result-card { background: #FBBF24; border: 4px solid black; border-radius: 20px; box-shadow: 8px 8px 0 black; padding: 36px 48px; text-align: center; transform: scale(0); transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: all; max-width: 400px; }
+  #result-card.show { transform: scale(1); }
+  .result-badge { display: inline-block; background: #EF4444; color: white; border: 2px solid black; border-radius: 999px; padding: 4px 16px; font-family: 'Fredoka One', cursive; font-size: 1rem; margin-bottom: 12px; }
+  #result-player { font-family: 'Fredoka One', cursive; font-size: 2.8rem; line-height: 1; }
+  #result-challenge { font-family: 'Fredoka One', cursive; font-size: 1.6rem; color: #7C3AED; margin-top: 8px; }
+  .vote-timer { margin-top: 16px; background: rgba(0,0,0,0.1); border-radius: 8px; padding: 8px 16px; font-weight: 800; }
+
+  /* Flash overlay */
+  #flash { position: fixed; inset: 0; background: white; opacity: 0; pointer-events: none; z-index: 200; transition: opacity 0.15s; }
+
+  /* Spin warning overlay */
+  #warning-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 90; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  #warning-overlay.show { opacity: 1; }
+  #warning-num { font-family: 'Fredoka One', cursive; font-size: 10rem; color: white; text-shadow: 4px 4px 0 black; animation: pulse 1s ease-in-out; }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+
+  .btn { font-family: 'Fredoka One', cursive; border: 3px solid black; border-radius: 10px; box-shadow: 4px 4px 0 black; cursor: pointer; transition: all 0.1s; padding: 10px 24px; font-size: 1.1rem; }
+  .btn:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 black; }
+  .btn-red { background: #EF4444; color: white; }
+  .btn-green { background: #22C55E; color: white; }
+</style>
+</head>
+<body>
+
+<!-- Flash -->
+<div id="flash"></div>
+<!-- Warning overlay -->
+<div id="warning-overlay"><div id="warning-num">3</div></div>
+<!-- Result overlay -->
+<div id="result-overlay">
+  <div id="result-card">
+    <div class="result-badge" id="result-type">🍺 DRINK</div>
+    <div id="result-player">CHRISTIAN</div>
+    <div id="result-challenge">3 sips!</div>
+    <div class="vote-timer">⏱ Voting opens in 3s...</div>
+    <button class="btn btn-red mt-4" onclick="closeResult()" style="margin-top:16px">✕ Close</button>
+  </div>
+</div>
+
+<header>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span style="font-size:1.6rem">🎡</span>
+    <span class="fredoka" style="font-size:1.5rem">Wheel of Bad Decisions</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <div class="time-display" id="timer">29:47</div>
+    <div class="room-pill">ABC123</div>
+    <button class="icon-btn" title="QR Code">📷</button>
+    <button class="icon-btn" id="mute-btn" title="Mute sounds">🔊</button>
+    <button class="icon-btn" id="sidebar-btn" onclick="toggleSidebar()" title="Players">👥</button>
+    <button class="icon-btn btn-red" style="background:#EF4444;color:white;border-color:black" onclick="window.location.href='07-stats.html'">⏹ End</button>
+  </div>
+</header>
+
+<div class="countdown-bar-wrap">
+  <div id="countdown-bar"></div>
+</div>
+
+<main>
+  <div class="wheels-area">
+
+    <!-- WHO wheel -->
+    <div class="wheel-col">
+      <div class="wheel-label">👤 WHO SPINS?</div>
+      <div class="wheel-wrap">
+        <div class="pointer"></div>
+        <svg class="wheel-svg" id="who-svg" viewBox="0 0 300 300" width="280" height="280">
+          <g id="who-group" class="wheel-group"></g>
+          <circle cx="150" cy="150" r="22" fill="white" stroke="black" stroke-width="3"/>
+          <text x="150" y="155" text-anchor="middle" dominant-baseline="middle" font-family="Fredoka One,cursive" font-size="18">🎡</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Demo spin button (center) -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
+      <button class="btn btn-red" style="font-size:1.3rem;padding:16px 28px" onclick="demoSpin()" id="spin-btn">
+        🎲 DEMO SPIN
+      </button>
+      <button class="btn" style="background:#E5E7EB;font-size:0.9rem;padding:8px 16px" onclick="toggleSidebar()">
+        👥 Toggle players
+      </button>
+    </div>
+
+    <!-- WHAT wheel -->
+    <div class="wheel-col">
+      <div class="wheel-label">🎯 WHAT HAPPENS?</div>
+      <div class="wheel-wrap">
+        <div class="pointer"></div>
+        <svg class="wheel-svg" id="what-svg" viewBox="0 0 300 300" width="280" height="280">
+          <g id="what-group" class="wheel-group"></g>
+          <circle cx="150" cy="150" r="22" fill="white" stroke="black" stroke-width="3"/>
+          <text x="150" y="155" text-anchor="middle" dominant-baseline="middle" font-family="Fredoka One,cursive" font-size="18">🎯</text>
+        </svg>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div class="fredoka" style="font-size:1.2rem;margin-bottom:12px">👥 Players</div>
+    <div class="player-row">
+      <span><span class="player-dot"></span><b>Christian</b> 👑</span>
+      <span>🍺🍺🍺</span>
+    </div>
+    <div class="player-row">
+      <span><span class="player-dot"></span><b>Alex</b></span>
+      <span>🍺</span>
+    </div>
+    <div class="player-row">
+      <span><span class="player-dot away"></span><b>Jo</b> <small style="color:#9CA3AF">(away)</small></span>
+      <span>🍺🍺</span>
+    </div>
+    <div class="player-row">
+      <span><span class="player-dot"></span><b>Maria</b></span>
+      <span>🍺🍺🍺</span>
+    </div>
+    <div style="margin-top:16px;border-top:2px solid #F3F4F6;padding-top:12px">
+      <div class="fredoka" style="font-size:1rem;margin-bottom:8px">📋 Rules</div>
+      <div style="font-size:0.8rem;font-weight:700;color:#6B7280;line-height:1.6">
+        · No swearing<br>· Left hand only
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="rules-bar">
+  📋 Active rules: <span>No swearing</span> · <span>Left hand only</span>
+  <span style="margin-left:auto;color:#9CA3AF;font-size:0.8rem">Spin #3 of the night</span>
+</div>
+
+<script>
+// ── Wheel drawing ──────────────────────────────────────────────────────────
+const COLORS = ['#EF4444','#3B82F6','#22C55E','#F97316','#A855F7','#EC4899'];
+
+function buildWheel(groupId, segments) {
+  const g = document.getElementById(groupId);
+  g.innerHTML = '';
+  const cx = 150, cy = 150, r = 135;
+  const n = segments.length;
+  const slice = (2 * Math.PI) / n;
+
+  segments.forEach((seg, i) => {
+    const a0 = i * slice - Math.PI / 2;
+    const a1 = (i + 1) * slice - Math.PI / 2;
+    const x1 = cx + r * Math.cos(a0), y1 = cy + r * Math.sin(a0);
+    const x2 = cx + r * Math.cos(a1), y2 = cy + r * Math.sin(a1);
+    const large = slice > Math.PI ? 1 : 0;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', `M ${cx} ${cy} L ${x1.toFixed(1)} ${y1.toFixed(1)} A ${r} ${r} 0 ${large} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} Z`);
+    path.setAttribute('fill', seg.color);
+    path.setAttribute('stroke', '#000');
+    path.setAttribute('stroke-width', '3');
+    g.appendChild(path);
+
+    const mid = (a0 + a1) / 2;
+    const tr = r * 0.62;
+    const tx = cx + tr * Math.cos(mid), ty = cy + tr * Math.sin(mid);
+    const rot = mid * 180 / Math.PI + 90;
+
+    const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('x', tx.toFixed(1));
+    txt.setAttribute('y', ty.toFixed(1));
+    txt.setAttribute('text-anchor', 'middle');
+    txt.setAttribute('dominant-baseline', 'middle');
+    txt.setAttribute('fill', 'white');
+    txt.setAttribute('font-family', 'Fredoka One, cursive');
+    txt.setAttribute('font-size', n <= 4 ? '17' : '14');
+    txt.setAttribute('transform', `rotate(${rot.toFixed(1)},${tx.toFixed(1)},${ty.toFixed(1)})`);
+    txt.style.textShadow = '1px 1px 2px rgba(0,0,0,0.7)';
+    txt.setAttribute('filter', 'drop-shadow(1px 1px 1px rgba(0,0,0,0.6))');
+    txt.textContent = seg.label;
+    g.appendChild(txt);
+  });
+}
+
+const WHO = [
+  { label: 'Christian', color: COLORS[0] },
+  { label: 'Alex',      color: COLORS[1] },
+  { label: 'Jo',        color: COLORS[2] },
+  { label: 'Maria',     color: COLORS[3] },
+];
+
+const WHAT = [
+  { label: '🍺 Drink',   color: COLORS[0] },
+  { label: '🌍 Social',  color: COLORS[1] },
+  { label: '🤝 Give/Take', color: COLORS[2] },
+  { label: '💬 Truth',   color: COLORS[3] },
+  { label: '😈 Dare',    color: COLORS[4] },
+  { label: '🎯 Challenge', color: COLORS[5] },
+];
+
+buildWheel('who-group', WHO);
+buildWheel('what-group', WHAT);
+
+// ── Spin logic ─────────────────────────────────────────────────────────────
+let whoRotation = 0, whatRotation = 0;
+let spinning = false;
+
+function spinAngleForSegment(n, segIndex) {
+  const slice = 360 / n;
+  const center = segIndex * slice + slice / 2;
+  return (360 * 6) + (360 - center);
+}
+
+const RESULTS = [
+  { player: 'CHRISTIAN', type: '🍺 DRINK', challenge: '3 sips!', typeColor: '#EF4444', whoIdx: 0, whatIdx: 0 },
+  { player: 'ALEX',      type: '😈 DARE',  challenge: 'Bark like a dog!', typeColor: '#A855F7', whoIdx: 1, whatIdx: 4 },
+  { player: 'MARIA',     type: '🌍 SOCIAL', challenge: 'Everyone drinks!', typeColor: '#3B82F6', whoIdx: 3, whatIdx: 1 },
+  { player: 'JO',        type: '💬 TRUTH', challenge: 'Most embarrassing moment?', typeColor: '#22C55E', whoIdx: 2, whatIdx: 3 },
+];
+let resultIdx = 0;
+
+function demoSpin() {
+  if (spinning) return;
+  spinning = true;
+  document.getElementById('spin-btn').disabled = true;
+  document.getElementById('spin-btn').textContent = '⏳ Spinning...';
+  closeResult();
+
+  // Warning countdown 3→2→1
+  const warn = document.getElementById('warning-overlay');
+  const num = document.getElementById('warning-num');
+  let count = 3;
+  warn.classList.add('show');
+  num.textContent = count;
+
+  const tick = setInterval(() => {
+    count--;
+    if (count <= 0) {
+      clearInterval(tick);
+      warn.classList.remove('show');
+      doSpin();
+    } else {
+      num.textContent = count;
+      num.style.animation = 'none';
+      num.offsetHeight;
+      num.style.animation = 'pulse 1s ease-in-out';
+    }
+  }, 700);
+}
+
+function doSpin() {
+  const res = RESULTS[resultIdx % RESULTS.length];
+  resultIdx++;
+
+  const whoAdd = spinAngleForSegment(WHO.length, res.whoIdx);
+  const whatAdd = spinAngleForSegment(WHAT.length, res.whatIdx);
+  whoRotation += whoAdd;
+  whatRotation += whatAdd;
+
+  const wg = document.getElementById('who-group');
+  const wtg = document.getElementById('what-group');
+  wg.style.transition  = 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+  wtg.style.transition = 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+  wg.style.transform   = `rotate(${whoRotation}deg)`;
+  wtg.style.transform  = `rotate(${whatRotation}deg)`;
+
+  setTimeout(() => {
+    // Flash
+    const fl = document.getElementById('flash');
+    fl.style.opacity = '1';
+    setTimeout(() => { fl.style.opacity = '0'; }, 180);
+
+    // Show result
+    document.getElementById('result-type').textContent = res.type;
+    document.getElementById('result-type').style.background = res.typeColor;
+    document.getElementById('result-player').textContent = res.player;
+    document.getElementById('result-challenge').textContent = res.challenge;
+    document.getElementById('result-card').classList.add('show');
+    spinning = false;
+    document.getElementById('spin-btn').disabled = false;
+    document.getElementById('spin-btn').textContent = '🎲 DEMO SPIN';
+  }, 4200);
+}
+
+function closeResult() {
+  document.getElementById('result-card').classList.remove('show');
+}
+
+// ── Timer countdown ──────────────────────────────────────────────────────
+let secs = 29 * 60 + 47;
+function tick() {
+  secs--;
+  if (secs < 0) secs = 30 * 60;
+  const m = Math.floor(secs / 60).toString().padStart(2,'0');
+  const s = (secs % 60).toString().padStart(2,'0');
+  document.getElementById('timer').textContent = `${m}:${s}`;
+  const pct = (secs / (30 * 60)) * 100;
+  const bar = document.getElementById('countdown-bar');
+  bar.style.width = pct + '%';
+  bar.style.background = pct > 50 ? 'linear-gradient(90deg,#22C55E,#4ADE80)' : pct > 20 ? 'linear-gradient(90deg,#F97316,#FBBF24)' : 'linear-gradient(90deg,#EF4444,#F97316)';
+}
+setInterval(tick, 1000);
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('hidden');
+}
+</script>
+</body>
+</html>

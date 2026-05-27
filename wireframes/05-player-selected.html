@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Player Selected — Wheel of Bad Decisions</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Nunito', sans-serif; background: #9CA3AF; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .fredoka { font-family: 'Fredoka One', cursive; }
+  .phone { background: #FFF9E6; width: 390px; min-height: 844px; border-radius: 40px; border: 6px solid #1F2937; box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column; }
+  .phone-bar { height: 32px; background: #EF4444; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; font-size: 0.7rem; font-weight: 800; color: white; flex-shrink: 0; }
+  .btn-lg { font-family: 'Fredoka One', cursive; font-size: 1.6rem; border: 4px solid black; border-radius: 14px; padding: 18px; cursor: pointer; box-shadow: 5px 5px 0 black; transition: all 0.1s; width: 100%; }
+  .btn-lg:hover { transform: translate(2px,2px); box-shadow: 3px 3px 0 black; }
+  .btn-lg:active { transform: translate(5px,5px); box-shadow: 0 0 0 black; }
+  .btn-done { background: #22C55E; color: white; }
+  .btn-nope { background: #EF4444; color: white; }
+  .powerup-btn { font-family: 'Fredoka One', cursive; border: 3px solid black; border-radius: 10px; box-shadow: 3px 3px 0 black; cursor: pointer; padding: 10px 6px; font-size: 0.8rem; text-align: center; background: white; flex: 1; transition: all 0.1s; }
+  .powerup-btn:hover { transform: translate(1px,1px); box-shadow: 2px 2px 0 black; }
+  .powerup-btn.used { background: #E5E7EB; color: #9CA3AF; box-shadow: none; border-color: #D1D5DB; text-decoration: line-through; }
+  .challenge-card { background: #FBBF24; border: 4px solid black; border-radius: 18px; box-shadow: 6px 6px 0 black; padding: 28px; text-align: center; }
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; justify-content: center; z-index: 50; }
+  .modal-bg.show { display: flex; }
+  .modal-sheet { background: #FFF9E6; border: 3px solid black; border-radius: 20px 20px 0 0; padding: 24px; width: 390px; box-shadow: 0 -4px 0 black; animation: slideUp 0.25s ease; }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .player-pick { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border: 3px solid black; border-radius: 12px; background: white; cursor: pointer; font-weight: 800; font-size: 1rem; box-shadow: 3px 3px 0 black; margin-bottom: 8px; transition: all 0.1s; }
+  .player-pick:hover { background: #FEF3C7; transform: translate(1px,1px); box-shadow: 2px 2px 0 black; }
+  .btn-sm { font-family: 'Fredoka One', cursive; border: 3px solid black; border-radius: 10px; box-shadow: 3px 3px 0 black; cursor: pointer; padding: 12px; font-size: 1rem; transition: all 0.1s; }
+  .btn-sm:hover { transform: translate(1px,1px); box-shadow: 2px 2px 0 black; }
+
+  /* Flash on load */
+  #flash { position: fixed; inset: 0; background: white; animation: flashIn 0.5s ease forwards; z-index: 100; pointer-events: none; }
+  @keyframes flashIn { 0% { opacity: 1; } 60% { opacity: 0.8; } 100% { opacity: 0; } }
+</style>
+</head>
+<body>
+<div id="flash"></div>
+
+<!-- Revenge modal -->
+<div class="modal-bg" id="revenge-modal">
+  <div class="modal-sheet">
+    <div class="fredoka" style="font-size:1.4rem;margin-bottom:4px">🗡️ Send it to who?</div>
+    <p style="color:#6B7280;font-weight:700;font-size:0.9rem;margin-bottom:16px">Pick a player to redirect this spin to</p>
+    <div class="player-pick" onclick="confirmRevenge('Alex')"><span>👤 Alex</span><span>→</span></div>
+    <div class="player-pick" onclick="confirmRevenge('Jo')"><span>👤 Jo</span><span>→</span></div>
+    <div class="player-pick" onclick="confirmRevenge('Maria')"><span>👤 Maria</span><span>→</span></div>
+    <button class="btn-sm" style="background:#E5E7EB;width:100%;margin-top:8px" onclick="closeModal('revenge-modal')">Cancel</button>
+  </div>
+</div>
+
+<!-- Double down modal -->
+<div class="modal-bg" id="dd-modal">
+  <div class="modal-sheet" style="text-align:center">
+    <div class="fredoka" style="font-size:1.6rem;margin-bottom:8px">🎲 Double Down?</div>
+    <div style="background:#FEE2E2;border:2px solid #EF4444;border-radius:10px;padding:12px;margin-bottom:8px;font-weight:700">
+      😬 Lose: DRINK 6 SIPS
+    </div>
+    <div style="background:#D1FAE5;border:2px solid #22C55E;border-radius:10px;padding:12px;margin-bottom:16px;font-weight:700">
+      🎉 Win: Walk free!
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-sm" style="background:#F97316;color:white;flex:1" onclick="rollDouble()">GAMBLE! 🎲</button>
+      <button class="btn-sm" style="background:#E5E7EB;flex:1" onclick="closeModal('dd-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Double down result -->
+<div class="modal-bg" id="dd-result">
+  <div class="modal-sheet" style="text-align:center" id="dd-result-inner">
+  </div>
+</div>
+
+<div class="phone">
+  <div class="phone-bar">
+    <span>9:41</span>
+    <span>🎡 Wheel of Bad Decisions</span>
+    <span>📶 🔋</span>
+  </div>
+
+  <!-- Red "your turn" header -->
+  <div style="background:#EF4444;padding:16px 20px;text-align:center;flex-shrink:0">
+    <div class="fredoka" style="font-size:2rem;color:white;text-shadow:2px 2px 0 rgba(0,0,0,0.3)">🔥 IT'S YOUR TURN! 🔥</div>
+    <div style="color:rgba(255,255,255,0.8);font-weight:700;font-size:0.9rem;margin-top:2px">Wheel #3 of the night</div>
+  </div>
+
+  <!-- Scrollable body -->
+  <div style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px">
+
+    <!-- Challenge card -->
+    <div class="challenge-card">
+      <div style="display:inline-block;background:#EF4444;color:white;border:2px solid black;border-radius:999px;padding:4px 16px;font-family:'Fredoka One',cursive;font-size:1rem;margin-bottom:12px">🍺 DRINK</div>
+      <div class="fredoka" style="font-size:4rem;line-height:1;color:#1F2937">3</div>
+      <div class="fredoka" style="font-size:2.2rem;color:#78350F">SIPS</div>
+    </div>
+
+    <!-- Vote timer -->
+    <div style="background:white;border:2px solid #E5E7EB;border-radius:10px;padding:10px 16px;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px">
+      <span style="font-weight:800;color:#6B7280;font-size:0.9rem">⏱ Voting closes in</span>
+      <span class="fredoka" style="font-size:1.1rem;color:#EF4444" id="vote-timer">28s</span>
+    </div>
+
+    <!-- Done / Nope buttons -->
+    <div style="display:flex;gap:12px">
+      <button class="btn-lg btn-done" onclick="submitVote('done')">✅ DONE</button>
+      <button class="btn-lg btn-nope" onclick="submitVote('nope')">❌ NOPE</button>
+    </div>
+
+    <!-- Power-ups -->
+    <div style="background:white;border:3px solid black;border-radius:14px;box-shadow:4px 4px 0 black;padding:14px">
+      <div class="fredoka" style="font-size:1rem;margin-bottom:10px;color:#6B7280">Use a power-up?</div>
+      <div style="display:flex;gap:8px">
+        <button class="powerup-btn" onclick="openModal('revenge-modal')">
+          <div style="font-size:1.3rem">🗡️</div>
+          Revenge<br><small>Redirect</small>
+        </button>
+        <button class="powerup-btn" onclick="useSafe()">
+          <div style="font-size:1.3rem">🛡️</div>
+          Safe Card<br><small>Skip it</small>
+        </button>
+        <button class="powerup-btn" onclick="openModal('dd-modal')">
+          <div style="font-size:1.3rem">🎲</div>
+          Double<br><small>50/50</small>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Nav -->
+  <div style="display:flex;gap:8px;padding:12px 20px;border-top:2px solid #E5E7EB;flex-shrink:0">
+    <a href="04-player-idle.html" style="flex:1;text-align:center;font-family:'Fredoka One',cursive;font-size:0.8rem;padding:8px;border:2px solid black;border-radius:8px;background:white;box-shadow:2px 2px 0 black;text-decoration:none;color:black">← Back</a>
+    <a href="06-player-voting.html" style="flex:2;text-align:center;font-family:'Fredoka One',cursive;font-size:0.8rem;padding:8px;border:2px solid black;border-radius:8px;background:white;box-shadow:2px 2px 0 black;text-decoration:none;color:black">→ Demo: Vote screen</a>
+  </div>
+</div>
+
+<script>
+let vtSecs = 28;
+const vt = setInterval(() => {
+  vtSecs--;
+  if (vtSecs < 0) { clearInterval(vt); document.getElementById('vote-timer').textContent = 'Closed'; return; }
+  document.getElementById('vote-timer').textContent = vtSecs + 's';
+}, 1000);
+
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function confirmRevenge(name) {
+  closeModal('revenge-modal');
+  alert(`🗡️ Spin redirected to ${name}!`);
+  document.querySelectorAll('.powerup-btn')[0].classList.add('used');
+}
+
+function useSafe() {
+  if (confirm('🛡️ Use your Safe Card to skip this spin?')) {
+    document.querySelectorAll('.powerup-btn')[1].classList.add('used');
+    alert('🛡️ Safe! You skip this round.');
+  }
+}
+
+function rollDouble() {
+  closeModal('dd-modal');
+  const win = Math.random() > 0.5;
+  document.getElementById('dd-result-inner').innerHTML = win
+    ? `<div class="fredoka" style="font-size:1.8rem;color:#16A34A;margin-bottom:8px">🎉 YOU'RE FREE!</div><div style="font-weight:700;color:#6B7280">Coin landed heads — enjoy watching others suffer</div><button class="btn-sm" style="background:#22C55E;color:white;margin-top:16px;width:100%" onclick="closeModal('dd-result')">Nice! 🙏</button>`
+    : `<div class="fredoka" style="font-size:1.8rem;color:#EF4444;margin-bottom:8px">😬 BAD LUCK...</div><div style="background:#FEE2E2;border:2px solid #EF4444;border-radius:10px;padding:12px;font-weight:800;font-size:1.2rem;margin-bottom:4px">DRINK 6 SIPS NOW</div><button class="btn-sm" style="background:#EF4444;color:white;margin-top:16px;width:100%" onclick="closeModal('dd-result')">Fine... 😩</button>`;
+  openModal('dd-result');
+  document.querySelectorAll('.powerup-btn')[2].classList.add('used');
+}
+
+function submitVote(type) {
+  const el = event.target;
+  el.style.opacity = '0.5';
+  el.disabled = true;
+  el.textContent = type === 'done' ? '✅ Voted: Done!' : '❌ Voted: Nope!';
+}
+</script>
+</body>
+</html>

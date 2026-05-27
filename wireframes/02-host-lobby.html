@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lobby — Wheel of Bad Decisions</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Nunito', sans-serif; background: #FFF9E6; }
+  .fredoka { font-family: 'Fredoka One', cursive; }
+  .card { background: white; border: 3px solid black; border-radius: 14px; box-shadow: 5px 5px 0 black; }
+  .btn { font-family: 'Fredoka One', cursive; border: 3px solid black; border-radius: 10px; box-shadow: 4px 4px 0 black; cursor: pointer; transition: all 0.1s; padding: 14px 32px; font-size: 1.4rem; }
+  .btn:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 black; }
+  .btn-yellow { background: #FBBF24; color: black; }
+  .btn-gray   { background: #E5E7EB; color: #6B7280; cursor: not-allowed; }
+  .room-code  { font-family: 'Fredoka One', cursive; font-size: 5rem; background: #FBBF24; border: 4px solid black; border-radius: 16px; padding: 16px 32px; box-shadow: 6px 6px 0 black; letter-spacing: 0.15em; display: inline-block; }
+  .player-chip { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border: 3px solid black; border-radius: 999px; font-weight: 800; font-size: 1rem; box-shadow: 3px 3px 0 black; animation: popIn 0.3s ease; }
+  @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .config-badge { background: white; border: 2px solid #D1D5DB; border-radius: 8px; padding: 6px 14px; font-weight: 700; font-size: 0.9rem; color: #374151; display: inline-flex; align-items: center; gap: 6px; }
+  .qr-box { width: 140px; height: 140px; border: 3px solid black; border-radius: 12px; box-shadow: 4px 4px 0 black; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+  .url-box { background: #F3F4F6; border: 2px solid #D1D5DB; border-radius: 8px; padding: 8px 14px; font-size: 0.8rem; font-weight: 700; color: #6B7280; word-break: break-all; }
+</style>
+</head>
+<body class="min-h-screen p-6">
+
+<!-- Header -->
+<header class="flex items-center justify-between mb-8">
+  <div class="flex items-center gap-3">
+    <span class="text-3xl">🎡</span>
+    <span class="fredoka text-3xl">Wheel of Bad Decisions</span>
+  </div>
+  <div class="flex items-center gap-3">
+    <div class="config-badge">⏱ 30 min</div>
+    <div class="config-badge">🌶 Normal</div>
+    <button class="config-badge cursor-pointer hover:bg-gray-100" style="border-color:#9CA3AF">⚙ Edit config</button>
+  </div>
+</header>
+
+<!-- Main -->
+<div class="flex gap-8 items-start justify-center">
+
+  <!-- Left: Code + QR -->
+  <div class="card p-8 text-center" style="min-width:340px">
+    <p class="fredoka text-xl text-gray-500 mb-2">Room code</p>
+    <div class="room-code mb-4">ABC123</div>
+    <p class="text-gray-500 font-semibold mb-4">Share with players</p>
+    <div class="flex items-center gap-4 justify-center">
+      <div class="qr-box">
+        <svg width="100" height="100" viewBox="0 0 100 100">
+          <!-- Fake QR pattern -->
+          <rect width="100" height="100" fill="white"/>
+          <rect x="5" y="5" width="35" height="35" fill="none" stroke="black" stroke-width="4"/>
+          <rect x="12" y="12" width="21" height="21" fill="black"/>
+          <rect x="60" y="5" width="35" height="35" fill="none" stroke="black" stroke-width="4"/>
+          <rect x="67" y="12" width="21" height="21" fill="black"/>
+          <rect x="5" y="60" width="35" height="35" fill="none" stroke="black" stroke-width="4"/>
+          <rect x="12" y="67" width="21" height="21" fill="black"/>
+          <rect x="60" y="60" width="8" height="8" fill="black"/>
+          <rect x="72" y="60" width="8" height="8" fill="black"/>
+          <rect x="84" y="60" width="8" height="8" fill="black"/>
+          <rect x="60" y="72" width="8" height="8" fill="black"/>
+          <rect x="84" y="72" width="8" height="8" fill="black"/>
+          <rect x="60" y="84" width="8" height="8" fill="black"/>
+          <rect x="72" y="84" width="8" height="8" fill="black"/>
+          <rect x="84" y="84" width="8" height="8" fill="black"/>
+          <rect x="45" y="5" width="8" height="8" fill="black"/>
+          <rect x="45" y="17" width="8" height="8" fill="black"/>
+          <rect x="45" y="29" width="8" height="8" fill="black"/>
+          <rect x="45" y="45" width="8" height="8" fill="black"/>
+          <rect x="5" y="45" width="8" height="8" fill="black"/>
+          <rect x="17" y="45" width="8" height="8" fill="black"/>
+          <rect x="29" y="45" width="8" height="8" fill="black"/>
+          <rect x="45" y="57" width="8" height="8" fill="black"/>
+        </svg>
+        <span style="font-size:0.65rem;font-weight:700;color:#6B7280">Scan to join</span>
+      </div>
+      <div class="text-left">
+        <p class="text-xs font-700 text-gray-500 mb-1">Or open:</p>
+        <div class="url-box">wheel-of-bad.onrender.com/<br><strong>play/ABC123</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Players + Start -->
+  <div style="min-width:460px">
+    <div class="card p-6 mb-4">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="fredoka text-2xl">Players <span id="count" class="text-gray-400">(3)</span></h2>
+        <span class="text-sm font-700 text-green-600 bg-green-100 px-3 py-1 rounded-full border border-green-300">🟢 Waiting for more...</span>
+      </div>
+      <div id="players" class="flex flex-wrap gap-3">
+        <div class="player-chip" style="background:#FEF3C7">👑 Christian</div>
+        <div class="player-chip" style="background:#DBEAFE">🟢 Alex</div>
+        <div class="player-chip" style="background:#D1FAE5">🟢 Jo</div>
+        <div class="player-chip" style="background:#EDE9FE;animation-delay:0.1s">🟢 Maria</div>
+        <button class="player-chip" style="background:#F3F4F6;border-style:dashed;box-shadow:none;color:#9CA3AF" onclick="addPlayer()">+ Add player</button>
+      </div>
+    </div>
+
+    <div class="card p-5 mb-4" style="background:#FFFBEB">
+      <p class="fredoka text-lg mb-1">⚙ Game config</p>
+      <div class="flex gap-2 flex-wrap">
+        <div class="config-badge">⏱ 30 min intervals</div>
+        <div class="config-badge">🌶 Normal intensity</div>
+        <div class="config-badge">🎯 4 players</div>
+      </div>
+    </div>
+
+    <button class="btn btn-yellow w-full text-2xl py-5" style="width:100%" onclick="window.location.href='03-host-active.html'">
+      🎡 Start the Game!
+    </button>
+    <p class="text-center text-gray-400 font-semibold text-sm mt-2">Need at least 2 players to start</p>
+  </div>
+
+</div>
+
+<script>
+const names = ['Sam 🟢', 'Riley 🟢', 'Max 🟢', 'Casey 🟢'];
+let added = 0;
+function addPlayer() {
+  if (added >= names.length) return;
+  const chip = document.createElement('div');
+  chip.className = 'player-chip';
+  chip.style.background = ['#FEE2E2','#FEF9C3','#CFFAFE','#F3E8FF'][added % 4];
+  chip.textContent = names[added++];
+  document.getElementById('players').insertBefore(chip, document.getElementById('players').lastElementChild);
+  document.getElementById('count').textContent = `(${4 + added})`;
+}
+</script>
+</body>
+</html>

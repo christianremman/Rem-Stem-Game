@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Player Voting — Wheel of Bad Decisions</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Nunito', sans-serif; background: #9CA3AF; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .fredoka { font-family: 'Fredoka One', cursive; }
+  .phone { background: #FFF9E6; width: 390px; min-height: 844px; border-radius: 40px; border: 6px solid #1F2937; box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column; }
+  .phone-bar { height: 32px; background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; font-size: 0.7rem; font-weight: 800; color: #374151; flex-shrink: 0; }
+  .challenge-card { background: #FBBF24; border: 4px solid black; border-radius: 18px; box-shadow: 6px 6px 0 black; padding: 24px; text-align: center; }
+  .vote-btn { font-family: 'Fredoka One', cursive; font-size: 1.5rem; border: 4px solid black; border-radius: 14px; padding: 16px; cursor: pointer; box-shadow: 5px 5px 0 black; transition: all 0.1s; flex: 1; }
+  .vote-btn:hover { transform: translate(2px,2px); box-shadow: 3px 3px 0 black; }
+  .vote-btn:disabled { opacity: 0.5; transform: none !important; box-shadow: 5px 5px 0 black !important; cursor: default; }
+  .vote-btn.selected { transform: translate(3px,3px); box-shadow: 2px 2px 0 black; }
+  .btn-done { background: #22C55E; color: white; }
+  .btn-nope { background: #EF4444; color: white; }
+  .boo-btn { font-family: 'Fredoka One', cursive; font-size: 1.2rem; border: 3px solid black; border-radius: 12px; padding: 12px; cursor: pointer; background: white; box-shadow: 4px 4px 0 black; transition: all 0.1s; width: 100%; }
+  .boo-btn:hover { transform: translate(2px,2px); box-shadow: 2px 2px 0 black; }
+  .vote-icon { font-size: 1.4rem; animation: popVote 0.2s ease; }
+  @keyframes popVote { from { transform: scale(0); } to { transform: scale(1); } }
+  .result-card { background: white; border: 3px solid black; border-radius: 14px; box-shadow: 4px 4px 0 black; padding: 20px; text-align: center; display: none; }
+  .result-card.show { display: block; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="phone-bar">
+    <span>9:41</span>
+    <span>🎡 Wheel of Bad Decisions</span>
+    <span>📶 🔋</span>
+  </div>
+
+  <!-- Header -->
+  <div style="background:white;border-bottom:3px solid black;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div>
+      <div class="fredoka" style="font-size:1.1rem">🎡 Wheel of Bad Decisions</div>
+      <div style="font-size:0.75rem;font-weight:700;color:#6B7280">Hi, Jo! · Room ABC123</div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px">
+
+    <!-- Who got picked -->
+    <div style="text-align:center">
+      <div style="font-weight:800;color:#6B7280;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">This round</div>
+      <div class="fredoka" style="font-size:1.5rem"><span style="color:#EF4444">Christian</span> got...</div>
+    </div>
+
+    <!-- Challenge card (read-only) -->
+    <div class="challenge-card">
+      <div style="display:inline-block;background:#EF4444;color:white;border:2px solid black;border-radius:999px;padding:4px 16px;font-family:'Fredoka One',cursive;font-size:1rem;margin-bottom:10px">🍺 DRINK</div>
+      <div class="fredoka" style="font-size:3.5rem;line-height:1;color:#1F2937">3</div>
+      <div class="fredoka" style="font-size:2rem;color:#78350F">SIPS</div>
+    </div>
+
+    <!-- Voting question -->
+    <div id="vote-section">
+      <div style="text-align:center;font-weight:800;font-size:1.1rem;margin-bottom:10px">Did they do it?</div>
+      <div style="display:flex;gap:10px;margin-bottom:10px">
+        <button class="vote-btn btn-done" id="btn-done" onclick="castVote('done')">✅ DONE</button>
+        <button class="vote-btn btn-nope" id="btn-nope" onclick="castVote('nope')">❌ REFUSED</button>
+      </div>
+      <button class="boo-btn" id="btn-boo" onclick="sendBoo()">👎 BOO! (reaction only)</button>
+    </div>
+
+    <!-- Vote timer -->
+    <div style="background:white;border:2px solid #E5E7EB;border-radius:10px;padding:10px 16px;text-align:center">
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px">
+        <span style="font-weight:800;color:#6B7280;font-size:0.85rem">Voting closes in</span>
+        <span class="fredoka" style="font-size:1.1rem;color:#EF4444" id="vtimer">22s</span>
+      </div>
+      <!-- Live votes -->
+      <div style="margin-top:8px;display:flex;align-items:center;justify-content:center;gap:4px" id="live-votes">
+        <span style="font-size:0.8rem;font-weight:700;color:#9CA3AF;margin-right:4px">Live:</span>
+        <span class="vote-icon">✅</span>
+        <span class="vote-icon">✅</span>
+        <span class="vote-icon">❌</span>
+      </div>
+    </div>
+
+    <!-- Boo reactions display -->
+    <div id="boo-area" style="min-height:40px;text-align:center;font-size:1.5rem"></div>
+
+    <!-- Result (shown after vote closes) -->
+    <div class="result-card" id="result-section">
+      <div class="fredoka" style="font-size:1.5rem;margin-bottom:8px">📊 Vote Result</div>
+      <div style="display:flex;justify-content:center;gap:24px;font-size:1.1rem;font-weight:800;margin-bottom:12px">
+        <span>✅ 3 done</span>
+        <span>❌ 1 nope</span>
+      </div>
+      <div style="background:#D1FAE5;border:2px solid #22C55E;border-radius:12px;padding:12px;font-family:'Fredoka One',cursive;font-size:1.2rem;color:#166534">
+        ✅ Challenge completed!
+      </div>
+      <div style="margin-top:10px;font-size:0.8rem;font-weight:700;color:#9CA3AF">Back to waiting in 3s...</div>
+    </div>
+
+  </div>
+
+  <!-- Nav -->
+  <div style="display:flex;gap:8px;padding:12px 20px;border-top:2px solid #E5E7EB;flex-shrink:0">
+    <a href="04-player-idle.html" style="flex:1;text-align:center;font-family:'Fredoka One',cursive;font-size:0.8rem;padding:8px;border:2px solid black;border-radius:8px;background:white;box-shadow:2px 2px 0 black;text-decoration:none;color:black">← Idle</a>
+    <a href="05-player-selected.html" style="flex:1;text-align:center;font-family:'Fredoka One',cursive;font-size:0.8rem;padding:8px;border:2px solid black;border-radius:8px;background:white;box-shadow:2px 2px 0 black;text-decoration:none;color:black">Selected →</a>
+    <a href="07-stats.html" style="flex:1;text-align:center;font-family:'Fredoka One',cursive;font-size:0.8rem;padding:8px;border:2px solid black;border-radius:8px;background:#FBBF24;box-shadow:2px 2px 0 black;text-decoration:none;color:black">Stats →</a>
+  </div>
+</div>
+
+<script>
+let vtSecs = 22;
+let voted = false;
+const vt = setInterval(() => {
+  vtSecs--;
+  const el = document.getElementById('vtimer');
+  if (vtSecs <= 0) {
+    clearInterval(vt);
+    el.textContent = 'Closed';
+    document.getElementById('btn-done').disabled = true;
+    document.getElementById('btn-nope').disabled = true;
+    document.getElementById('btn-boo').disabled = true;
+    document.getElementById('result-section').classList.add('show');
+    return;
+  }
+  el.textContent = vtSecs + 's';
+  // Simulate votes coming in
+  if (vtSecs === 15 && !voted) {
+    addVoteIcon('✅');
+  }
+}, 1000);
+
+function addVoteIcon(icon) {
+  const span = document.createElement('span');
+  span.className = 'vote-icon';
+  span.textContent = icon;
+  document.getElementById('live-votes').appendChild(span);
+}
+
+function castVote(type) {
+  if (voted) return;
+  voted = true;
+  document.getElementById('btn-done').disabled = true;
+  document.getElementById('btn-nope').disabled = true;
+  const btn = type === 'done' ? document.getElementById('btn-done') : document.getElementById('btn-nope');
+  btn.classList.add('selected');
+  btn.style.opacity = '1';
+  btn.textContent = type === 'done' ? '✅ You voted: Done!' : '❌ You voted: Nope!';
+  addVoteIcon(type === 'done' ? '✅' : '❌');
+}
+
+let booCount = 0;
+function sendBoo() {
+  booCount++;
+  const boo = document.createElement('span');
+  boo.textContent = '👎 ';
+  boo.style.animation = 'popVote 0.2s ease';
+  boo.style.fontSize = '1.6rem';
+  document.getElementById('boo-area').appendChild(boo);
+  if (booCount >= 3) document.getElementById('btn-boo').disabled = true;
+}
+</script>
+</body>
+</html>
