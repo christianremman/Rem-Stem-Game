@@ -179,13 +179,176 @@ src/
 
 ---
 
+## UI/UX Design
+
+### Visual Language
+
+**Theme:** Loud & colorful — carnival/game-show energy. Bright colors, bold black outlines, thick borders, drop shadows. Think Wheel of Fortune meets a beer pong table.
+
+**CSS Framework:** Tailwind CSS
+
+**Color palette:**
+
+| Token | Value | Use |
+|-------|-------|-----|
+| Background | `#FFF9E6` warm cream | Page background |
+| Wheel Red | `#EF4444` | Segment |
+| Wheel Blue | `#3B82F6` | Segment |
+| Wheel Green | `#22C55E` | Segment |
+| Wheel Orange | `#F97316` | Segment |
+| Wheel Purple | `#A855F7` | Segment |
+| Wheel Pink | `#EC4899` | Segment |
+| Challenge card | `#FBBF24` yellow | ChallengeCard bg |
+| Text | `#1F2937` | Dark body text |
+| Border | `#000000` 3px | All cards/wheels |
+
+**Typography:** Fredoka One (Google Fonts) for all headings and challenge text — rounded, bold, playful. Nunito for supporting body text. Max 3 font sizes per screen; prefer weight over size for hierarchy.
+
+---
+
+### Host Screen (landscape — TV / laptop)
+
+```
+┌─────────────────────────────────────────────────┐
+│  🎡 Wheel of Bad Decisions   ⏱ 14:32   ABC123 📷 │  ← top bar
+├────────────────────┬────────────────────────────┤
+│                    │                            │
+│   WHO WHEEL        │   WHAT WHEEL               │  ← main area
+│   (player names)   │   (challenge type)         │
+│                    │                            │
+│    ▼ pointer       │    ▼ pointer               │
+│   /~~~~~\          │   /~~~~~\                  │
+│  / R | B \         │  /🍺 | 😈\                 │
+│ | G  +  Y |        │ |DRINK+DARE|               │
+│  \ P | O /         │  \🌍 | 🎯/                 │
+│   \~~~~~/          │   \~~~~~/                  │
+│                    │                            │
+├────────────────────┴────────────────────────────┤
+│  📋 Active rules: no swearing · left hand only  │  ← rules ticker
+└─────────────────────────────────────────────────┘
+         ↕ toggleable right sidebar
+┌─────────────────────────┐
+│ Players                 │
+│ 🟢 Christian   🍺🍺🍺  │
+│ 🟡 Alex (away) 🍺       │
+│ 🟢 Jo          🍺🍺    │
+└─────────────────────────┘
+```
+
+- Result card pops in **center overlay** between both wheels on spin result (scale + fade in, z-index over both wheels)
+- Player panel toggled by host with a button — hidden by default to keep screen clean
+- Countdown bar runs across the top below the header; color transitions green → yellow → red
+
+---
+
+### Player Screen (portrait — mobile)
+
+**Idle state:**
+```
+┌───────────────────┐
+│  Wheel of Bad 🎡  │
+│  Hi, Christian!   │
+│                   │
+│   Next spin in    │
+│   ┌───────────┐   │
+│   │  14 : 32  │   │
+│   └───────────┘   │
+│                   │
+│  Your power-ups:  │
+│ [🗡 Revenge][🛡 Safe][🎲 x2] │
+└───────────────────┘
+```
+
+**Selected state (full-screen takeover, triggered by SPIN_RESULT with your playerId):**
+```
+┌───────────────────┐
+│  🔥 IT'S YOU! 🔥  │  ← flash animation entry
+│                   │
+│  ┌─────────────┐  │
+│  │  🍺 DRINK   │  │  ← ChallengeCard — large, centered
+│  │  3 SIPS     │  │
+│  └─────────────┘  │
+│                   │
+│  ┌───────┐ ┌────┐ │
+│  │ DONE ✓│ │ ✗  │ │  ← min 44px tap target
+│  └───────┘ └────┘ │
+│  [🗡 Revenge][🛡 Safe][🎲 x2] │
+└───────────────────┘
+```
+
+**Voting state (you're not selected — watching):**
+```
+┌───────────────────┐
+│  Christian got:   │
+│  DRINK 3 SIPS     │
+│                   │
+│  Did they do it?  │
+│  [✅ DONE] [❌ NO] │
+│  [👎 BOO]         │
+└───────────────────┘
+```
+
+---
+
+### Wheel Component (SpinWheel.vue)
+
+- **SVG-based** (not Canvas) — scales cleanly to any screen size, accessible
+- Segments drawn as SVG `<path>` elements with `clipPath`
+- Bold 3px black stroke between segments
+- Center hub: white circle, game logo or emoji
+- Pointer: fixed SVG triangle at 12 o'clock, outside the wheel, bold black with drop shadow
+- Segment text: Fredoka One, white, radially oriented, truncated at 12 chars
+
+---
+
+### Animation Sequence (high drama)
+
+**At SPIN_WARNING (T-5s):**
+1. Screen darkens slightly (overlay `bg-black/20`)
+2. Drumroll audio starts
+3. Large 5→1 countdown flashes center screen
+
+**Spin phase:**
+1. Both wheels begin rotating simultaneously
+2. Fast initial velocity (easing: `cubic-bezier(0.2, 0, 0.8, 1)`)
+3. Deceleration phase: `cubic-bezier(0, 0, 0.2, 1)` over final 1.5s
+4. Total duration: ~4s
+5. Lands on server-determined segment
+
+**At result:**
+1. White screen flash (200ms, `opacity-100 → 0`)
+2. Airhorn / result sound sting
+3. Result card scales in from center (`scale-0 → scale-100`, 300ms spring)
+4. Confetti burst (`canvas-confetti` library)
+5. Player name and challenge text animate in with stagger
+
+**Sound controls:**
+- Mute button always visible on host screen (top-right)
+- Each player can mute on their device independently
+- Sounds: `drumroll.mp3`, `airhorn.mp3`, `tick.mp3` (wheel ticks during deceleration)
+
+---
+
+### Stats Screen
+
+Full-width card grid, one card per player. Each card shows:
+- Player name (large, Fredoka One)
+- Times selected, completed, refused
+- Estimated sips
+- Title badge (e.g. "🏆 Party Animal", "🐔 Biggest Coward")
+
+Confetti plays on page load. "Play again" button creates a new room.
+
+---
+
 ## Wheel Animation
 
-- CSS `transform: rotate()` with `transition: transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99)`
-- Spin duration ~3–4 seconds
-- Result determined server-side before animation starts; animation is cosmetic
-- Both wheels spin simultaneously; results revealed after animation completes
-- Sound: optional spin sound + result sting (can be muted per device)
+- SVG wheel; rotation via CSS `transform: rotate()` applied to the SVG group
+- Two-phase easing: fast start `cubic-bezier(0.2, 0, 0.8, 1)` → deceleration `cubic-bezier(0, 0, 0.2, 1)` over final 1.5s, total ~4s
+- Result angle computed server-side and sent in SPIN_RESULT; animation is purely cosmetic
+- Both wheels spin simultaneously
+- Sound files loaded at game start to avoid latency: `drumroll.mp3`, `airhorn.mp3`, `tick.mp3`
+- Per-device mute button; host mute button on HostView
 
 ---
 
@@ -226,6 +389,10 @@ Players who disconnect are **not removed from the wheel** — their name stays a
 ### Phase 1 — Project scaffold
 - Spring Boot project init (Spring Web, WebSocket, Lombok)
 - Vue 3 + TypeScript project init (Vite, Pinia, Vue Router, SockJS + STOMP)
+- Tailwind CSS configured in Vite
+- Google Font: Fredoka One + Nunito loaded via `index.html`
+- `canvas-confetti` npm package added
+- Sound assets: `drumroll.mp3`, `airhorn.mp3`, `tick.mp3` placed in `public/sounds/`
 - Maven frontend plugin wiring
 - `render.yaml`
 
