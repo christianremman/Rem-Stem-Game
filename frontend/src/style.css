@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cream font-nunito text-gray-800;
+  }
+
+  h1, h2, h3, .font-display {
+    @apply font-fredoka;
+  }
+}
+
+@layer utilities {
+  .border-game {
+    @apply border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+}

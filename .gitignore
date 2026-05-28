@@ -1,0 +1,19 @@
+
+.claude
+
+# Maven
+target/
+*.class
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

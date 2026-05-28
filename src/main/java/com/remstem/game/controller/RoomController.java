@@ -1,0 +1,125 @@
+package com.remstem.game.controller;
+
+import com.remstem.game.model.*;
+import com.remstem.game.scheduler.SpinScheduler;
+import com.remstem.game.service.RoomService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+
+@RestController
+@RequestMapping("/api/rooms")
+@RequiredArgsConstructor
+public class RoomController {
+
+    private final RoomService roomService;
+    private final SpinScheduler spinScheduler;
+    private final SimpMessagingTemplate messaging;
+
+    @PostMapping
+    public ResponseEntity<Map<String, String>> create() {
+        Room room = roomService.create();
+        return ResponseEntity.ok(Map.of("roomCode", room.getCode(), "hostToken", room.getHostToken()));
+    }
+
+    @GetMapping("/{code}")
+    public ResponseEntity<?> get(@PathVariable String code) {
+        return roomService.find(code)
+                .map(r -> ResponseEntity.ok(roomView(r)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{code}/players")
+    public ResponseEntity<?> join(@PathVariable String code, @RequestBody Map<String, String> body) {
+        try {
+            String name = body.get("name");
+            if (name == null || name.isBlank()) return ResponseEntity.badRequest().build();
+            if (name.trim().length() > 20) return ResponseEntity.badRequest().build();
+            Player player = roomService.join(code, name.trim());
+            messaging.convertAndSend("/topic/rooms/" + code,
+                    WsEvent.of("PLAYER_JOINED", Map.of("player", playerView(player))));
+            return ResponseEntity.ok(Map.of("playerId", player.getId(), "playerName", player.getName()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).build();
+        }
+    }
+
+    @PutMapping("/{code}/config")
+    public ResponseEntity<?> config(@PathVariable String code,
+                                    @RequestHeader(value = "X-Host-Token", required = false) String hostToken,
+                                    @RequestBody GameConfig config) {
+        Room room = roomService.find(code).orElse(null);
+        if (room == null) return ResponseEntity.notFound().build();
+        if (!Objects.equals(room.getHostToken(), hostToken)) return ResponseEntity.status(403).build();
+        roomService.updateConfig(code, config);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{code}/start")
+    public ResponseEntity<?> start(@PathVariable String code,
+                                   @RequestHeader(value = "X-Host-Token", required = false) String hostToken) {
+        try {
+            Room room = roomService.find(code).orElseThrow(() -> new NoSuchElementException("Room not found"));
+            if (!Objects.equals(room.getHostToken(), hostToken)) return ResponseEntity.status(403).build();
+            roomService.start(code);
+            messaging.convertAndSend("/topic/rooms/" + code,
+                    WsEvent.of("GAME_STARTED", Map.of("config", room.getConfig())));
+            spinScheduler.start(code);
+            return ResponseEntity.ok().build();
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/{code}/end")
+    public ResponseEntity<?> end(@PathVariable String code,
+                                 @RequestHeader(value = "X-Host-Token", required = false) String hostToken) {
+        Room room = roomService.find(code).orElse(null);
+        if (room == null) return ResponseEntity.notFound().build();
+        if (!Objects.equals(room.getHostToken(), hostToken)) return ResponseEntity.status(403).build();
+        if (room.getState() == GameState.ENDED) {
+            return ResponseEntity.ok(roomService.buildStats(room));
+        }
+        Map<String, Object> stats = roomService.end(code);
+        spinScheduler.stop(code);
+        messaging.convertAndSend("/topic/rooms/" + code, WsEvent.of("GAME_ENDED", stats));
+        return ResponseEntity.ok(stats);
+    }
+
+    @DeleteMapping("/{code}/players/{playerId}")
+    public ResponseEntity<?> removePlayer(@PathVariable String code, @PathVariable String playerId,
+                                          @RequestHeader(value = "X-Host-Token", required = false) String hostToken) {
+        Room room = roomService.find(code).orElse(null);
+        if (room == null) return ResponseEntity.notFound().build();
+        if (!Objects.equals(room.getHostToken(), hostToken)) return ResponseEntity.status(403).build();
+        roomService.removePlayer(code, playerId);
+        return ResponseEntity.ok().build();
+    }
+
+    private Map<String, Object> roomView(Room room) {
+        return Map.of(
+                "code", room.getCode(),
+                "state", room.getState(),
+                "config", room.getConfig(),
+                "players", room.getPlayerList().stream().map(this::playerView).toList(),
+                "activeRules", room.getActiveRules(),
+                "spinCount", room.getSpinCount().get()
+        );
+    }
+
+    private Map<String, Object> playerView(Player player) {
+        return Map.of(
+                "id", player.getId(),
+                "name", player.getName(),
+                "connected", player.isConnected(),
+                "powerUps", player.getPowerUps()
+        );
+    }
+}
