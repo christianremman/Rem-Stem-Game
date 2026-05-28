@@ -1,0 +1,12 @@
+[
+  {"text": "Ask the player about their most recent relationship status — 3 questions minimum.", "intensity": "NORMAL"},
+  {"text": "The group votes on the player's most likely personality flaw — then each player defends their vote.", "intensity": "NORMAL"},
+  {"text": "Each player asks one question the selected player must answer truthfully — no passing.", "intensity": "CHILL"},
+  {"text": "Group agrees on one word to describe the player and says it simultaneously — player has to react.", "intensity": "CHILL"},
+  {"text": "Ask the player to rank everyone in the room from most to least trustworthy — out loud.", "intensity": "SAVAGE"},
+  {"text": "Group asks the player about their love life — 3 questions, any topic.", "intensity": "NORMAL"},
+  {"text": "Ask the player what they genuinely think of each person in the room — one sentence per person.", "intensity": "SAVAGE"},
+  {"text": "Group interrogates the player about the last time they did something they shouldn't have.", "intensity": "SAVAGE"},
+  {"text": "Ask the player 3 'what would you do if...' scenarios — group rates the answers.", "intensity": "CHILL"},
+  {"text": "Group chooses a life decision the player has made and questions them about it for 60 seconds.", "intensity": "NORMAL"}
+]
