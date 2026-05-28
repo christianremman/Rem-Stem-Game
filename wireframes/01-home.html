@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home — Wheel of Bad Decisions</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Nunito', sans-serif; background: #FFF9E6; }
+  .fredoka { font-family: 'Fredoka One', cursive; }
+  .card { background: white; border: 3px solid black; border-radius: 14px; box-shadow: 5px 5px 0 black; }
+  .btn { font-family: 'Fredoka One', cursive; border: 3px solid black; border-radius: 10px; box-shadow: 4px 4px 0 black; cursor: pointer; transition: all 0.1s; display: block; width: 100%; padding: 14px; font-size: 1.3rem; text-align: center; }
+  .btn:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 black; }
+  .btn:active { transform: translate(4px, 4px); box-shadow: 0 0 0 black; }
+  .btn-yellow { background: #FBBF24; color: black; }
+  .btn-blue   { background: #3B82F6; color: white; }
+  .input { border: 3px solid black; border-radius: 10px; padding: 12px 16px; font-size: 1rem; font-family: 'Nunito', sans-serif; font-weight: 700; width: 100%; background: #FFFBEB; box-shadow: 3px 3px 0 black; outline: none; }
+  .input:focus { border-color: #F97316; }
+  .toggle-group { display: flex; border: 3px solid black; border-radius: 10px; overflow: hidden; box-shadow: 3px 3px 0 black; }
+  .toggle-opt { flex: 1; padding: 10px; text-align: center; font-family: 'Fredoka One', cursive; font-size: 1rem; cursor: pointer; background: white; border: none; transition: background 0.15s; }
+  .toggle-opt.active { background: #FBBF24; }
+  .toggle-opt:not(:last-child) { border-right: 2px solid black; }
+  .label { font-weight: 800; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: #6B7280; margin-bottom: 6px; display: block; }
+  .divider { display: flex; align-items: center; gap: 12px; color: #9CA3AF; font-weight: 700; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 2px; background: #D1D5DB; }
+</style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+<div style="width:100%;max-width:420px">
+
+  <!-- Header -->
+  <div class="text-center mb-6">
+    <div class="fredoka text-5xl mb-1">🎡</div>
+    <h1 class="fredoka text-4xl leading-tight">Wheel of Bad<br>Decisions</h1>
+    <p class="text-gray-500 font-semibold mt-1">The party game that ruins friendships 🍺</p>
+  </div>
+
+  <!-- Create Game -->
+  <div class="card p-6 mb-4">
+    <h2 class="fredoka text-2xl mb-4">🎉 Create a Game</h2>
+
+    <div class="mb-4">
+      <span class="label">Your name</span>
+      <input class="input" type="text" placeholder="Enter your name..." value="Christian">
+    </div>
+
+    <div class="mb-4">
+      <span class="label">Spin interval</span>
+      <div class="toggle-group">
+        <button class="toggle-opt" onclick="setToggle(this, 'interval')">15 min</button>
+        <button class="toggle-opt active" onclick="setToggle(this, 'interval')">30 min</button>
+      </div>
+    </div>
+
+    <div class="mb-5">
+      <span class="label">Intensity 🌶</span>
+      <div class="toggle-group">
+        <button class="toggle-opt" onclick="setToggle(this, 'intensity')">Chill</button>
+        <button class="toggle-opt active" onclick="setToggle(this, 'intensity')">Normal</button>
+        <button class="toggle-opt" onclick="setToggle(this, 'intensity')" style="background:#FEE2E2">Savage 🔥</button>
+      </div>
+    </div>
+
+    <button class="btn btn-yellow" onclick="goTo('02-host-lobby.html')">🎡 Create Game</button>
+  </div>
+
+  <!-- Divider -->
+  <div class="divider my-4"><span>OR</span></div>
+
+  <!-- Join Game -->
+  <div class="card p-6">
+    <h2 class="fredoka text-2xl mb-4">🚪 Join a Game</h2>
+
+    <div class="mb-4">
+      <span class="label">Room code</span>
+      <input class="input" type="text" placeholder="ABC123" maxlength="6" style="text-transform:uppercase;letter-spacing:0.2em;font-size:1.4rem;text-align:center" value="ABC123">
+    </div>
+
+    <div class="mb-5">
+      <span class="label">Your name</span>
+      <input class="input" type="text" placeholder="Enter your name...">
+    </div>
+
+    <button class="btn btn-blue" onclick="goTo('04-player-idle.html')">🚀 Join Game</button>
+  </div>
+
+</div>
+
+<script>
+function setToggle(el, group) {
+  el.closest('.toggle-group').querySelectorAll('.toggle-opt').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+function goTo(page) { window.location.href = page; }
+</script>
+</body>
+</html>
