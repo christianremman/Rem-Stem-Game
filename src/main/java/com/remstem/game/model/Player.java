@@ -3,7 +3,6 @@ package com.remstem.game.model;
 import lombok.Data;
 import java.util.EnumSet;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Data
 public class Player {
@@ -20,8 +19,6 @@ public class Player {
     private int refused = 0;
     private int estimatedSips = 0;
     private int rulesSet = 0;
-
-    private final AtomicInteger version = new AtomicInteger(0);
 
     public Player(String id, String name) {
         this.id = id;

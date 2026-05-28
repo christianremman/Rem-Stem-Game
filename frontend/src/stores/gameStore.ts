@@ -43,6 +43,7 @@ export const useGameStore = defineStore('game', () => {
   const spinCount = ref(0)
 
   const currentSpin = ref<SpinResultData | null>(null)
+  const spinAngles = ref<{ player: number; challenge: number }>({ player: 0, challenge: 0 })
   const secondsUntilSpin = ref<number | null>(null)
   const isSpinning = ref(false)
   const isWarning = ref(false)
@@ -89,11 +90,13 @@ export const useGameStore = defineStore('game', () => {
         isWarning.value = false
         voteWindowOpen.value = false
         voteResult.value = null
+        if (p) {
+          spinAngles.value = { player: p.playerWheelAngle ?? 0, challenge: p.challengeWheelAngle ?? 0 }
+        }
         break
       case 'SPIN_RESULT':
         currentSpin.value = p
         isSpinning.value = false
-        spinCount.value++
         break
       case 'VOTE_WINDOW_OPEN':
         voteWindowOpen.value = true
@@ -122,7 +125,7 @@ export const useGameStore = defineStore('game', () => {
   return {
     roomCode, hostToken, playerId, playerName, isHost,
     players, activeRules, config, gameState, spinCount,
-    currentSpin, secondsUntilSpin, isSpinning, isWarning,
+    currentSpin, spinAngles, secondsUntilSpin, isSpinning, isWarning,
     voteWindowOpen, voteResult, stats, myPlayer,
     applyRoomState, handleEvent
   }

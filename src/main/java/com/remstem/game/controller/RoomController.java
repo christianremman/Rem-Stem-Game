@@ -36,7 +36,9 @@ public class RoomController {
     @PostMapping("/{code}/players")
     public ResponseEntity<?> join(@PathVariable String code, @RequestBody Map<String, String> body) {
         try {
-            Player player = roomService.join(code, body.get("name"));
+            String name = body.get("name");
+            if (name == null || name.isBlank()) return ResponseEntity.badRequest().build();
+            Player player = roomService.join(code, name.trim());
             Room room = roomService.find(code).orElseThrow();
             messaging.convertAndSend("/topic/rooms/" + code,
                     WsEvent.of("PLAYER_JOINED", Map.of("player", playerView(player))));
@@ -54,15 +56,24 @@ public class RoomController {
 
     @PostMapping("/{code}/start")
     public ResponseEntity<?> start(@PathVariable String code) {
-        Room room = roomService.start(code);
-        messaging.convertAndSend("/topic/rooms/" + code,
-                WsEvent.of("GAME_STARTED", Map.of("config", room.getConfig())));
-        spinScheduler.start(code);
-        return ResponseEntity.ok().build();
+        try {
+            Room room = roomService.start(code);
+            messaging.convertAndSend("/topic/rooms/" + code,
+                    WsEvent.of("GAME_STARTED", Map.of("config", room.getConfig())));
+            spinScheduler.start(code);
+            return ResponseEntity.ok().build();
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping("/{code}/end")
     public ResponseEntity<?> end(@PathVariable String code) {
+        Room room = roomService.find(code).orElse(null);
+        if (room == null) return ResponseEntity.notFound().build();
+        if (room.getState() == GameState.ENDED) {
+            return ResponseEntity.ok(roomService.buildStats(room));
+        }
         Map<String, Object> stats = roomService.end(code);
         spinScheduler.stop(code);
         messaging.convertAndSend("/topic/rooms/" + code, WsEvent.of("GAME_ENDED", stats));

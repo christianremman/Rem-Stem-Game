@@ -25,7 +25,7 @@ export function useWebSocket() {
         if (store.playerId) {
           client!.publish({
             destination: `/app/rooms/${roomCode}/register`,
-            body: JSON.stringify({ playerId: store.playerId, sessionId: client!.clientId })
+            body: JSON.stringify({ playerId: store.playerId })
           })
         }
       },

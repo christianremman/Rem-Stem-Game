@@ -55,6 +55,14 @@ public class ChallengeService {
         if (candidates.isEmpty()) {
             candidates = pool.getOrDefault(type, List.of());
         }
+        if (candidates.isEmpty()) {
+            Challenge fallback = new Challenge();
+            fallback.setType(type);
+            fallback.setText("Take 2 sips.");
+            fallback.setSips(2);
+            fallback.setIntensity(intensity);
+            return fallback;
+        }
         return candidates.get(new Random().nextInt(candidates.size()));
     }
 

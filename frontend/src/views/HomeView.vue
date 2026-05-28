@@ -65,36 +65,44 @@ const error = ref('')
 
 async function createRoom() {
   error.value = ''
-  const res = await fetch('/api/rooms', { method: 'POST' })
-  if (!res.ok) { error.value = 'Failed to create room.'; return }
-  const data = await res.json()
-  store.roomCode = data.roomCode
-  store.hostToken = data.hostToken
-  store.isHost = true
+  try {
+    const res = await fetch('/api/rooms', { method: 'POST' })
+    if (!res.ok) { error.value = 'Failed to create room.'; return }
+    const data = await res.json()
+    store.roomCode = data.roomCode
+    store.hostToken = data.hostToken
+    store.isHost = true
 
-  await fetch(`/api/rooms/${data.roomCode}/config`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(createConfig.value)
-  })
+    await fetch(`/api/rooms/${data.roomCode}/config`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(createConfig.value)
+    })
 
-  router.push(`/host/${data.roomCode}`)
+    router.push(`/host/${data.roomCode}`)
+  } catch {
+    error.value = 'Cannot reach server. Is the backend running?'
+  }
 }
 
 async function joinRoom() {
   error.value = ''
-  const code = joinCode.value.toUpperCase().trim()
-  const res = await fetch(`/api/rooms/${code}/players`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: joinName.value.trim() })
-  })
-  if (!res.ok) { error.value = 'Room not found.'; return }
-  const data = await res.json()
-  store.roomCode = code
-  store.playerId = data.playerId
-  store.playerName = data.playerName
-  store.isHost = false
-  router.push(`/play/${code}`)
+  try {
+    const code = joinCode.value.toUpperCase().trim()
+    const res = await fetch(`/api/rooms/${code}/players`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: joinName.value.trim() })
+    })
+    if (!res.ok) { error.value = 'Room not found.'; return }
+    const data = await res.json()
+    store.roomCode = code
+    store.playerId = data.playerId
+    store.playerName = data.playerName
+    store.isHost = false
+    router.push(`/play/${code}`)
+  } catch {
+    error.value = 'Cannot reach server. Is the backend running?'
+  }
 }
 </script>

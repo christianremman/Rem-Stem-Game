@@ -73,7 +73,13 @@ public class RoomService {
     }
 
     public Map<String, Object> buildStats(Room room) {
-        List<Map<String, Object>> playerStats = room.getPlayerList().stream().map(p -> {
+        List<Player> all = room.getPlayerList();
+        int maxSelected = all.stream().mapToInt(Player::getTimesSelected).max().orElse(0);
+        int maxRefused  = all.stream().mapToInt(Player::getRefused).max().orElse(0);
+        int maxSips     = all.stream().mapToInt(Player::getEstimatedSips).max().orElse(0);
+        int maxRules    = all.stream().mapToInt(Player::getRulesSet).max().orElse(0);
+
+        List<Map<String, Object>> playerStats = all.stream().map(p -> {
             Map<String, Object> s = new LinkedHashMap<>();
             s.put("id", p.getId());
             s.put("name", p.getName());
@@ -81,18 +87,13 @@ public class RoomService {
             s.put("completed", p.getCompleted());
             s.put("refused", p.getRefused());
             s.put("estimatedSips", p.getEstimatedSips());
-            s.put("title", assignTitle(p, room));
+            s.put("title", assignTitle(p, maxSelected, maxRefused, maxSips, maxRules));
             return s;
         }).toList();
         return Map.of("players", playerStats, "totalSpins", room.getSpinCount());
     }
 
-    private String assignTitle(Player p, Room room) {
-        int maxSelected = room.getPlayerList().stream().mapToInt(Player::getTimesSelected).max().orElse(0);
-        int maxRefused = room.getPlayerList().stream().mapToInt(Player::getRefused).max().orElse(0);
-        int maxSips = room.getPlayerList().stream().mapToInt(Player::getEstimatedSips).max().orElse(0);
-        int maxRules = room.getPlayerList().stream().mapToInt(Player::getRulesSet).max().orElse(0);
-
+    private String assignTitle(Player p, int maxSelected, int maxRefused, int maxSips, int maxRules) {
         if (p.getTimesSelected() == maxSelected && maxSelected > 0) return "The Unlucky One";
         if (p.getRefused() == maxRefused && maxRefused > 0) return "Biggest Coward";
         if (p.getEstimatedSips() == maxSips && maxSips > 0) return "Iron Stomach";

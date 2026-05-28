@@ -4,6 +4,7 @@ import com.remstem.game.model.*;
 import com.remstem.game.service.RoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -34,6 +35,8 @@ public class GameSocketController {
             return;
         }
 
+        if (!last.getVoters().add(playerId)) return;
+
         Player selected = last.getPlayer();
         if ("REFUSED".equals(vote)) {
             selected.setRefused(selected.getRefused() + 1);
@@ -55,7 +58,12 @@ public class GameSocketController {
         if (room == null) return;
 
         String playerId = (String) body.get("playerId");
-        PowerUpType type = PowerUpType.valueOf((String) body.get("type"));
+        PowerUpType type;
+        try {
+            type = PowerUpType.valueOf((String) body.get("type"));
+        } catch (IllegalArgumentException | NullPointerException e) {
+            return;
+        }
         String targetId = (String) body.getOrDefault("targetId", null);
 
         Player player = room.getPlayers().get(playerId);
@@ -93,9 +101,9 @@ public class GameSocketController {
     }
 
     @MessageMapping("/rooms/{code}/register")
-    public void register(@DestinationVariable String code, @Payload Map<String, String> body) {
+    public void register(@DestinationVariable String code, @Payload Map<String, String> body,
+                         @Header("simpSessionId") String sessionId) {
         String playerId = body.get("playerId");
-        String sessionId = body.get("sessionId");
         roomService.find(code).ifPresent(room -> {
             Player p = room.getPlayers().get(playerId);
             if (p != null) {

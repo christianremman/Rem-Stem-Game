@@ -120,9 +120,6 @@ onMounted(async () => {
   if (!res.ok) { router.push('/'); return }
   const data = await res.json()
   store.applyRoomState(data)
-  const me = data.players.find((p: any) => p.id === store.playerId)
-  if (me) store.players = store.players.map(p => p.id === store.playerId ? { ...p, powerUps: me.powerUps } : p)
-
   connect(code)
 })
 

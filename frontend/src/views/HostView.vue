@@ -37,7 +37,7 @@
             :segments="playerSegments"
             :size="wheelSize"
             :spinning="store.isSpinning"
-            :target-angle="store.currentSpin?.playerWheelAngle ?? 0"
+            :target-angle="store.spinAngles.player"
           />
         </div>
         <div class="flex flex-col items-center gap-3">
@@ -46,7 +46,7 @@
             :segments="challengeSegments"
             :size="wheelSize"
             :spinning="store.isSpinning"
-            :target-angle="store.currentSpin?.challengeWheelAngle ?? 0"
+            :target-angle="store.spinAngles.challenge"
           />
         </div>
       </div>
@@ -135,7 +135,9 @@ const CHALLENGE_COLORS = ['#EF4444','#3B82F6','#22C55E','#F97316','#A855F7','#EC
 const CHALLENGE_LABELS = ['DRINK','SOCIAL','GIVE TAKE','TRUTH','DARE','CHALLENGE','HOT SEAT','MOST LIKELY']
 const PLAYER_COLORS = ['#EF4444','#3B82F6','#22C55E','#F97316','#A855F7','#EC4899','#FBBF24','#14B8A6','#F43F5E','#8B5CF6','#10B981','#F59E0B']
 
-const wheelSize = computed(() => Math.min(window.innerWidth / 2.6, 380))
+const windowWidth = ref(window.innerWidth)
+const onResize = () => { windowWidth.value = window.innerWidth }
+const wheelSize = computed(() => Math.min(windowWidth.value / 2.6, 380))
 
 const playerSegments = computed(() =>
   store.players.length
@@ -151,6 +153,7 @@ let pingInterval: ReturnType<typeof setInterval>
 
 onMounted(async () => {
   sound.preload()
+  window.addEventListener('resize', onResize)
   store.roomCode = code
   const res = await fetch(`/api/rooms/${code}`)
   if (!res.ok) { router.push('/'); return }
@@ -164,7 +167,10 @@ onMounted(async () => {
   }, 10 * 60 * 1000)
 })
 
-onUnmounted(() => clearInterval(pingInterval))
+onUnmounted(() => {
+  clearInterval(pingInterval)
+  window.removeEventListener('resize', onResize)
+})
 
 async function startGame() {
   await fetch(`/api/rooms/${code}/start`, { method: 'POST' })
