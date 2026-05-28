@@ -27,6 +27,9 @@ public class RoomService {
 
     public Player join(String code, String name) {
         Room room = find(code).orElseThrow(() -> new NoSuchElementException("Room not found"));
+        if (room.getState() != GameState.LOBBY) {
+            throw new IllegalStateException("Cannot join room that is not in lobby state");
+        }
         String playerId = UUID.randomUUID().toString();
         Player player = new Player(playerId, name);
         room.getPlayers().put(playerId, player);
@@ -35,6 +38,9 @@ public class RoomService {
 
     public Room start(String code) {
         Room room = find(code).orElseThrow();
+        if (room.getState() == GameState.ENDED) {
+            throw new IllegalStateException("Cannot start a game that has already ended");
+        }
         room.setState(GameState.ACTIVE);
         return room;
     }
