@@ -36,19 +36,35 @@ public class GameSocketController {
         }
 
         if (!last.getVoters().add(playerId)) return;
+        if (last.isResolved()) return;
 
-        Player selected = last.getPlayer();
+        int done, refused;
         if ("REFUSED".equals(vote)) {
-            selected.setRefused(selected.getRefused() + 1);
-            selected.setEstimatedSips(selected.getEstimatedSips() + 2);
-            messaging.convertAndSend("/topic/rooms/" + code,
-                    WsEvent.of("VOTE_RESULT", Map.of("completed", false, "extraDrinks", 2)));
+            refused = last.getVotesRefused().incrementAndGet();
+            done = last.getVotesDone().get();
         } else {
-            selected.setCompleted(selected.getCompleted() + 1);
-            int sips = last.getChallenge().getSips() != null ? last.getChallenge().getSips() : 0;
-            selected.setEstimatedSips(selected.getEstimatedSips() + sips);
-            messaging.convertAndSend("/topic/rooms/" + code,
-                    WsEvent.of("VOTE_RESULT", Map.of("completed", true, "extraDrinks", 0)));
+            done = last.getVotesDone().incrementAndGet();
+            refused = last.getVotesRefused().get();
+        }
+
+        int playerCount = room.getPlayers().size();
+        boolean majorityRefused = refused > playerCount / 2.0;
+        boolean majorityDone = done > playerCount / 2.0;
+
+        if ((majorityRefused || majorityDone) && last.markResolved()) {
+            Player selected = last.getPlayer();
+            if (refused > done) {
+                selected.setRefused(selected.getRefused() + 1);
+                selected.setEstimatedSips(selected.getEstimatedSips() + 2);
+                messaging.convertAndSend("/topic/rooms/" + code,
+                        WsEvent.of("VOTE_RESULT", Map.of("completed", false, "extraDrinks", 2)));
+            } else {
+                selected.setCompleted(selected.getCompleted() + 1);
+                int sips = last.getChallenge().getSips() != null ? last.getChallenge().getSips() : 0;
+                selected.setEstimatedSips(selected.getEstimatedSips() + sips);
+                messaging.convertAndSend("/topic/rooms/" + code,
+                        WsEvent.of("VOTE_RESULT", Map.of("completed", true, "extraDrinks", 0)));
+            }
         }
     }
 

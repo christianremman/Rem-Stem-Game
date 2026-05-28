@@ -27,6 +27,7 @@ public class SpinService {
 
     public SpinResult spin(Room room) {
         List<Player> players = room.getPlayerList();
+        if (players.isEmpty()) throw new IllegalStateException("Cannot spin with no players in room");
         int selectedIdx = new Random().nextInt(players.size());
         Player selected = players.get(selectedIdx);
 
