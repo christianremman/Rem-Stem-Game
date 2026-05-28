@@ -1,4 +1,4 @@
-# Wheel of Bad Decisions — Game Design & Implementation Plan
+# Wheel Unfortunate — Game Design & Implementation Plan
 
 ## Context
 
@@ -271,7 +271,7 @@ Avoids CORS complexity, one deployment to manage, Vue dist folder served from Sp
 Single Maven project. The Vue frontend lives in `frontend/` at the project root. Docker builds both in separate stages and copies Vue's `dist/` into `src/main/resources/static/` before compiling the JAR. Spring Boot serves everything from that static path.
 
 ```
-wheel-of-bad-decisions/
+wheel-unfortunate/
 ├── pom.xml
 ├── Dockerfile
 ├── render.yaml
@@ -450,7 +450,7 @@ src/
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  🎡 Wheel of Bad Decisions   ⏱ 14:32   ABC123 📷 │  ← top bar
+│  🎡 Wheel Unfortunate   ⏱ 14:32   ABC123 📷 │  ← top bar
 ├────────────────────┬────────────────────────────┤
 │                    │                            │
 │   WHO WHEEL        │   WHAT WHEEL               │  ← main area
@@ -486,7 +486,7 @@ src/
 **Idle state:**
 ```
 ┌───────────────────┐
-│  Wheel of Bad 🎡  │
+│  Wheel Unfortunate 🎡  │
 │  Hi, Christian!   │
 │                   │
 │   Next spin in    │
@@ -629,7 +629,7 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 ```yaml
 services:
   - type: web
-    name: wheel-of-bad-decisions
+    name: wheel-unfortunate
     env: docker
     envVars:
       - key: PORT
