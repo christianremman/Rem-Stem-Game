@@ -163,10 +163,10 @@ class RoomServiceTest {
     void updateConfig_updatesSpinInterval() {
         Room room = service.create();
         GameConfig config = new GameConfig();
-        config.setSpinIntervalMinutes(30);
+        config.setSpinIntervalMinutes(0.5);
         config.setIntensity(Intensity.SAVAGE);
         service.updateConfig(room.getCode(), config);
-        assertThat(room.getConfig().getSpinIntervalMinutes()).isEqualTo(30);
+        assertThat(room.getConfig().getSpinIntervalMinutes()).isEqualTo(0.5);
         assertThat(room.getConfig().getIntensity()).isEqualTo(Intensity.SAVAGE);
     }
 

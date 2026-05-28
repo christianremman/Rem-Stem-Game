@@ -11,6 +11,7 @@
           <label class="block font-nunito font-bold text-sm mb-1">Spin interval</label>
           <select v-model="createConfig.spinIntervalMinutes"
                   class="w-full border-2 border-black rounded-lg p-2 font-nunito">
+            <option :value="0.5">30 seconds (testing)</option>
             <option :value="15">15 minutes</option>
             <option :value="30">30 minutes</option>
           </select>

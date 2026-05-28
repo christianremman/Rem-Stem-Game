@@ -37,7 +37,7 @@ public class SpinScheduler {
     public void start(String roomCode) {
         stop(roomCode);
         Room room = roomService.find(roomCode).orElseThrow();
-        long intervalMs = (long) room.getConfig().getSpinIntervalMinutes() * 60 * 1000;
+        long intervalMs = intervalMinutesToMs(room.getConfig().getSpinIntervalMinutes());
         ScheduledFuture<?> future = executor.scheduleAtFixedRate(
                 () -> fireSpin(roomCode), INITIAL_SPIN_DELAY_MS, intervalMs, TimeUnit.MILLISECONDS);
         futures.put(roomCode, future);
@@ -85,7 +85,7 @@ public class SpinScheduler {
             }, 4, TimeUnit.SECONDS);
             revealFutures.put(roomCode, reveal);
 
-            long intervalMs = (long) room.getConfig().getSpinIntervalMinutes() * 60 * 1000;
+            long intervalMs = intervalMinutesToMs(room.getConfig().getSpinIntervalMinutes());
             scheduleCountdowns(roomCode, intervalMs);
         } catch (Exception e) {
             log.error("Spin error for room {}", roomCode, e);
@@ -124,5 +124,9 @@ public class SpinScheduler {
 
     private void broadcast(String code, WsEvent event) {
         messaging.convertAndSend("/topic/rooms/" + code, event);
+    }
+
+    private long intervalMinutesToMs(double minutes) {
+        return Math.round(minutes * 60 * 1000);
     }
 }

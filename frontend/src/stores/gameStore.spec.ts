@@ -12,13 +12,13 @@ describe('gameStore countdown', () => {
     vi.useRealTimers()
   })
 
-  it('GAME_STARTED initializes secondsUntilSpin from config', () => {
+  it('GAME_STARTED initializes secondsUntilSpin from initial spin delay', () => {
     const store = useGameStore()
     store.handleEvent({
       type: 'GAME_STARTED',
       payload: { config: { spinIntervalMinutes: 15, intensity: 'NORMAL' } }
     })
-    expect(store.secondsUntilSpin).toBe(900)
+    expect(store.secondsUntilSpin).toBe(5)
   })
 
   it('secondsUntilSpin counts down every second after GAME_STARTED', () => {
@@ -28,7 +28,7 @@ describe('gameStore countdown', () => {
       payload: { config: { spinIntervalMinutes: 1, intensity: 'NORMAL' } }
     })
     vi.advanceTimersByTime(5000)
-    expect(store.secondsUntilSpin).toBe(55)
+    expect(store.secondsUntilSpin).toBe(0)
   })
 
   it('COUNTDOWN syncs secondsUntilSpin from server', () => {
@@ -74,6 +74,26 @@ describe('gameStore countdown', () => {
     expect(store.secondsUntilSpin).toBe(60)
     vi.advanceTimersByTime(3000)
     expect(store.secondsUntilSpin).toBe(57)
+  })
+
+  it('SPIN_RESULT supports 30-second testing interval', () => {
+    const store = useGameStore()
+    store.handleEvent({
+      type: 'GAME_STARTED',
+      payload: { config: { spinIntervalMinutes: 0.5, intensity: 'NORMAL' } }
+    })
+    store.handleEvent({ type: 'SPIN_STARTING', payload: { playerWheelAngle: 90, challengeWheelAngle: 45 } })
+    store.handleEvent({
+      type: 'SPIN_RESULT',
+      payload: {
+        player: { id: 'p1', name: 'Alice', connected: true, powerUps: [] },
+        challenge: { type: 'DRINK', text: 'Drink 2 sips.', sips: 2, wheelIndex: 0 },
+        playerWheelAngle: 90,
+        challengeWheelAngle: 45,
+        spinNumber: 1
+      }
+    })
+    expect(store.secondsUntilSpin).toBe(30)
   })
 
   it('GAME_ENDED stops countdown', () => {
