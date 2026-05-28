@@ -32,14 +32,18 @@ public class SpinScheduler {
     private final Map<String, ScheduledFuture<?>> revealFutures = new ConcurrentHashMap<>();
     private final Map<String, List<ScheduledFuture<?>>> countdownFutures = new ConcurrentHashMap<>();
 
+    private static final long INITIAL_SPIN_DELAY_MS = 5_000L;
+
     public void start(String roomCode) {
         stop(roomCode);
         Room room = roomService.find(roomCode).orElseThrow();
         long intervalMs = (long) room.getConfig().getSpinIntervalMinutes() * 60 * 1000;
         ScheduledFuture<?> future = executor.scheduleAtFixedRate(
-                () -> fireSpin(roomCode), intervalMs, intervalMs, TimeUnit.MILLISECONDS);
+                () -> fireSpin(roomCode), INITIAL_SPIN_DELAY_MS, intervalMs, TimeUnit.MILLISECONDS);
         futures.put(roomCode, future);
-        scheduleCountdowns(roomCode, intervalMs);
+        broadcast(roomCode, WsEvent.of("SPIN_WARNING",
+                Map.of("secondsUntilSpin", (int) (INITIAL_SPIN_DELAY_MS / 1000))));
+        // countdowns for subsequent spins are scheduled by fireSpin() after each spin
     }
 
     public void stop(String roomCode) {

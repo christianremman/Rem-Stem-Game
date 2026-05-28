@@ -119,7 +119,7 @@ export const useGameStore = defineStore('game', () => {
       case 'GAME_STARTED':
         gameState.value = 'ACTIVE'
         config.value = p.config
-        startCountdown(p.config.spinIntervalMinutes * 60)
+        startCountdown(5)
         break
       case 'COUNTDOWN':
         secondsUntilSpin.value = p.secondsUntilSpin
