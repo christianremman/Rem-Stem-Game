@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/rooms")
@@ -38,6 +39,7 @@ public class RoomController {
         try {
             String name = body.get("name");
             if (name == null || name.isBlank()) return ResponseEntity.badRequest().build();
+            if (name.trim().length() > 20) return ResponseEntity.badRequest().build();
             Player player = roomService.join(code, name.trim());
             messaging.convertAndSend("/topic/rooms/" + code,
                     WsEvent.of("PLAYER_JOINED", Map.of("player", playerView(player))));
@@ -50,15 +52,23 @@ public class RoomController {
     }
 
     @PutMapping("/{code}/config")
-    public ResponseEntity<?> config(@PathVariable String code, @RequestBody GameConfig config) {
+    public ResponseEntity<?> config(@PathVariable String code,
+                                    @RequestHeader(value = "X-Host-Token", required = false) String hostToken,
+                                    @RequestBody GameConfig config) {
+        Room room = roomService.find(code).orElse(null);
+        if (room == null) return ResponseEntity.notFound().build();
+        if (!Objects.equals(room.getHostToken(), hostToken)) return ResponseEntity.status(403).build();
         roomService.updateConfig(code, config);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{code}/start")
-    public ResponseEntity<?> start(@PathVariable String code) {
+    public ResponseEntity<?> start(@PathVariable String code,
+                                   @RequestHeader(value = "X-Host-Token", required = false) String hostToken) {
         try {
-            Room room = roomService.start(code);
+            Room room = roomService.find(code).orElseThrow(() -> new NoSuchElementException("Room not found"));
+            if (!Objects.equals(room.getHostToken(), hostToken)) return ResponseEntity.status(403).build();
+            roomService.start(code);
             messaging.convertAndSend("/topic/rooms/" + code,
                     WsEvent.of("GAME_STARTED", Map.of("config", room.getConfig())));
             spinScheduler.start(code);
@@ -69,9 +79,11 @@ public class RoomController {
     }
 
     @PostMapping("/{code}/end")
-    public ResponseEntity<?> end(@PathVariable String code) {
+    public ResponseEntity<?> end(@PathVariable String code,
+                                 @RequestHeader(value = "X-Host-Token", required = false) String hostToken) {
         Room room = roomService.find(code).orElse(null);
         if (room == null) return ResponseEntity.notFound().build();
+        if (!Objects.equals(room.getHostToken(), hostToken)) return ResponseEntity.status(403).build();
         if (room.getState() == GameState.ENDED) {
             return ResponseEntity.ok(roomService.buildStats(room));
         }
@@ -82,7 +94,11 @@ public class RoomController {
     }
 
     @DeleteMapping("/{code}/players/{playerId}")
-    public ResponseEntity<?> removePlayer(@PathVariable String code, @PathVariable String playerId) {
+    public ResponseEntity<?> removePlayer(@PathVariable String code, @PathVariable String playerId,
+                                          @RequestHeader(value = "X-Host-Token", required = false) String hostToken) {
+        Room room = roomService.find(code).orElse(null);
+        if (room == null) return ResponseEntity.notFound().build();
+        if (!Objects.equals(room.getHostToken(), hostToken)) return ResponseEntity.status(403).build();
         roomService.removePlayer(code, playerId);
         return ResponseEntity.ok().build();
     }
@@ -94,7 +110,7 @@ public class RoomController {
                 "config", room.getConfig(),
                 "players", room.getPlayerList().stream().map(this::playerView).toList(),
                 "activeRules", room.getActiveRules(),
-                "spinCount", room.getSpinCount()
+                "spinCount", room.getSpinCount().get()
         );
     }
 

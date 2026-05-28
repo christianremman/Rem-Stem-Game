@@ -1,17 +1,25 @@
 package com.remstem.game.service;
 
 import com.remstem.game.model.*;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 public class RoomService {
 
     private final Map<String, Room> rooms = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService cleaner = Executors.newSingleThreadScheduledExecutor();
+
+    @PreDestroy
+    public void shutdown() { cleaner.shutdownNow(); }
 
     public Room create() {
         String code = generateCode();
@@ -32,22 +40,23 @@ public class RoomService {
         }
         String playerId = UUID.randomUUID().toString();
         Player player = new Player(playerId, name);
+        player.setJoinIndex(room.getJoinCounter().getAndIncrement());
         room.getPlayers().put(playerId, player);
         return player;
     }
 
-    public Room start(String code) {
+    public void start(String code) {
         Room room = find(code).orElseThrow();
         if (room.getState() == GameState.ENDED) {
             throw new IllegalStateException("Cannot start a game that has already ended");
         }
         room.setState(GameState.ACTIVE);
-        return room;
     }
 
     public Map<String, Object> end(String code) {
         Room room = find(code).orElseThrow();
         room.setState(GameState.ENDED);
+        cleaner.schedule(() -> rooms.remove(code), 1, TimeUnit.HOURS);
         return buildStats(room);
     }
 
@@ -96,7 +105,7 @@ public class RoomService {
             s.put("title", assignTitle(p, maxSelected, maxRefused, maxSips, maxRules));
             return s;
         }).toList();
-        return Map.of("players", playerStats, "totalSpins", room.getSpinCount());
+        return Map.of("players", playerStats, "totalSpins", room.getSpinCount().get());
     }
 
     private String assignTitle(Player p, int maxSelected, int maxRefused, int maxSips, int maxRules) {

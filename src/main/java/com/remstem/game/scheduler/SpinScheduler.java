@@ -29,6 +29,7 @@ public class SpinScheduler {
 
     private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(4);
     private final Map<String, ScheduledFuture<?>> futures = new ConcurrentHashMap<>();
+    private final Map<String, ScheduledFuture<?>> revealFutures = new ConcurrentHashMap<>();
     private final Map<String, List<ScheduledFuture<?>>> countdownFutures = new ConcurrentHashMap<>();
 
     public void start(String roomCode) {
@@ -44,6 +45,8 @@ public class SpinScheduler {
     public void stop(String roomCode) {
         ScheduledFuture<?> f = futures.remove(roomCode);
         if (f != null) f.cancel(false);
+        ScheduledFuture<?> reveal = revealFutures.remove(roomCode);
+        if (reveal != null) reveal.cancel(false);
         cancelCountdowns(roomCode);
     }
 
@@ -72,10 +75,11 @@ public class SpinScheduler {
                     "challengeWheelAngle", result.getChallengeWheelAngle()
             )));
 
-            executor.schedule(() -> {
+            ScheduledFuture<?> reveal = executor.schedule(() -> {
                 broadcast(roomCode, WsEvent.of("SPIN_RESULT", result));
                 broadcast(roomCode, WsEvent.of("VOTE_WINDOW_OPEN", Map.of("durationSeconds", 30)));
             }, 4, TimeUnit.SECONDS);
+            revealFutures.put(roomCode, reveal);
 
             long intervalMs = (long) room.getConfig().getSpinIntervalMinutes() * 60 * 1000;
             scheduleCountdowns(roomCode, intervalMs);

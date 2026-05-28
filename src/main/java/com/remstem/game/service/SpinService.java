@@ -41,8 +41,7 @@ public class SpinService {
 
         challenge.setWheelIndex(indexOf(TYPES, type));
 
-        room.setSpinCount(room.getSpinCount() + 1);
-        int spinNumber = room.getSpinCount();
+        int spinNumber = room.getSpinCount().incrementAndGet();
         selected.setTimesSelected(selected.getTimesSelected() + 1);
 
         SpinResult result = new SpinResult(selected, challenge, playerAngle, challengeAngle, spinNumber);

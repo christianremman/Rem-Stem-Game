@@ -75,7 +75,7 @@ async function createRoom() {
 
     await fetch(`/api/rooms/${data.roomCode}/config`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Host-Token': data.hostToken },
       body: JSON.stringify(createConfig.value)
     })
 

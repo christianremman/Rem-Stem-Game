@@ -136,11 +136,14 @@ class RoomControllerTest {
 
     @Test
     void updateConfig_returns200() throws Exception {
+        Room room = buildRoom("ABC123");
+        when(roomService.find("ABC123")).thenReturn(Optional.of(room));
         GameConfig config = new GameConfig();
         config.setSpinIntervalMinutes(30);
         config.setIntensity(Intensity.SAVAGE);
 
         mockMvc.perform(put("/api/rooms/ABC123/config")
+                        .header("X-Host-Token", "host-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(config)))
                 .andExpect(status().isOk());
@@ -153,11 +156,11 @@ class RoomControllerTest {
     @Test
     void startRoom_returns200_andStartsScheduler() throws Exception {
         Room room = buildRoom("ABC123");
-        room.setState(GameState.ACTIVE);
-        when(roomService.start("ABC123")).thenReturn(room);
         when(roomService.find("ABC123")).thenReturn(Optional.of(room));
+        doNothing().when(roomService).start("ABC123");
 
-        mockMvc.perform(post("/api/rooms/ABC123/start"))
+        mockMvc.perform(post("/api/rooms/ABC123/start")
+                        .header("X-Host-Token", "host-token"))
                 .andExpect(status().isOk());
 
         verify(spinScheduler).start("ABC123");
@@ -166,9 +169,10 @@ class RoomControllerTest {
 
     @Test
     void startRoom_returns404_whenRoomNotFound() throws Exception {
-        when(roomService.start("XXXXXX")).thenThrow(new NoSuchElementException());
+        when(roomService.find("XXXXXX")).thenReturn(Optional.empty());
 
-        mockMvc.perform(post("/api/rooms/XXXXXX/start"))
+        mockMvc.perform(post("/api/rooms/XXXXXX/start")
+                        .header("X-Host-Token", "host-token"))
                 .andExpect(status().isNotFound());
     }
 
@@ -181,7 +185,8 @@ class RoomControllerTest {
         when(roomService.find("ABC123")).thenReturn(Optional.of(room));
         when(roomService.end("ABC123")).thenReturn(Map.of("players", List.of(), "totalSpins", 3));
 
-        mockMvc.perform(post("/api/rooms/ABC123/end"))
+        mockMvc.perform(post("/api/rooms/ABC123/end")
+                        .header("X-Host-Token", "host-token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalSpins").value(3));
 
@@ -204,7 +209,8 @@ class RoomControllerTest {
         when(roomService.find("ABC123")).thenReturn(Optional.of(room));
         when(roomService.buildStats(room)).thenReturn(Map.of("players", List.of(), "totalSpins", 5));
 
-        mockMvc.perform(post("/api/rooms/ABC123/end"))
+        mockMvc.perform(post("/api/rooms/ABC123/end")
+                        .header("X-Host-Token", "host-token"))
                 .andExpect(status().isOk());
 
         verify(spinScheduler, never()).stop(any());
@@ -215,7 +221,10 @@ class RoomControllerTest {
 
     @Test
     void removePlayer_returns200() throws Exception {
-        mockMvc.perform(delete("/api/rooms/ABC123/players/p1"))
+        when(roomService.find("ABC123")).thenReturn(Optional.of(buildRoom("ABC123")));
+
+        mockMvc.perform(delete("/api/rooms/ABC123/players/p1")
+                        .header("X-Host-Token", "host-token"))
                 .andExpect(status().isOk());
 
         verify(roomService).removePlayer("ABC123", "p1");

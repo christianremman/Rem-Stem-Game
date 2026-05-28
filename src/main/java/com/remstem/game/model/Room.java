@@ -3,6 +3,8 @@ package com.remstem.game.model;
 import lombok.Data;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Data
 public class Room {
@@ -15,7 +17,8 @@ public class Room {
     private final List<SpinResult> history = Collections.synchronizedList(new ArrayList<>());
     private final List<String> activeRules = Collections.synchronizedList(new ArrayList<>());
 
-    private int spinCount = 0;
+    private final AtomicInteger spinCount = new AtomicInteger(0);
+    private final AtomicInteger joinCounter = new AtomicInteger(0);
 
     public Room(String code, String hostToken) {
         this.code = code;
@@ -23,6 +26,8 @@ public class Room {
     }
 
     public List<Player> getPlayerList() {
-        return new ArrayList<>(players.values());
+        return players.values().stream()
+                .sorted(Comparator.comparingInt(Player::getJoinIndex))
+                .collect(Collectors.toList());
     }
 }

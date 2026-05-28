@@ -45,7 +45,7 @@ class SpinServiceTest {
         assertThat(result.getPlayer()).isEqualTo(p);
         assertThat(result.getChallenge()).isNotNull();
         assertThat(p.getTimesSelected()).isEqualTo(1);
-        assertThat(room.getSpinCount()).isEqualTo(1);
+        assertThat(room.getSpinCount().get()).isEqualTo(1);
     }
 
     @Test
@@ -57,7 +57,7 @@ class SpinServiceTest {
         spinService.spin(room);
         spinService.spin(room);
 
-        assertThat(room.getSpinCount()).isEqualTo(2);
+        assertThat(room.getSpinCount().get()).isEqualTo(2);
     }
 
     @Test
@@ -80,7 +80,7 @@ class SpinServiceTest {
 
         SpinResult result = spinService.spin(room);
 
-        assertThat(result.getSpinNumber()).isEqualTo(room.getSpinCount());
+        assertThat(result.getSpinNumber()).isEqualTo(room.getSpinCount().get());
     }
 
     @Test

@@ -8,6 +8,7 @@ import java.util.Set;
 public class Player {
     private final String id;
     private final String name;
+    private int joinIndex;
     private boolean connected = true;
     private String sessionId;
 

@@ -117,8 +117,8 @@ class RoomServiceTest {
     @Test
     void start_setsStateToActive() {
         Room room = service.create();
-        Room started = service.start(room.getCode());
-        assertThat(started.getState()).isEqualTo(GameState.ACTIVE);
+        service.start(room.getCode());
+        assertThat(room.getState()).isEqualTo(GameState.ACTIVE);
     }
 
     @Test
@@ -283,7 +283,7 @@ class RoomServiceTest {
     @Test
     void buildStats_totalSpins_matchesRoomSpinCount() {
         Room room = service.create();
-        room.setSpinCount(7);
+        room.getSpinCount().set(7);
         var stats = service.buildStats(room);
         assertThat(stats.get("totalSpins")).isEqualTo(7);
     }

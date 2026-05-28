@@ -29,14 +29,15 @@ public class GameSocketController {
         String vote = body.get("vote");
         String playerId = body.get("playerId");
 
+        if (playerId.equals(last.getPlayer().getId())) return;
+        if (!last.getVoters().add(playerId)) return;
+        if (last.isResolved()) return;
+
         if ("BOO".equals(vote)) {
             messaging.convertAndSend("/topic/rooms/" + code,
                     WsEvent.of("BOO", Map.of("playerId", playerId)));
             return;
         }
-
-        if (!last.getVoters().add(playerId)) return;
-        if (last.isResolved()) return;
 
         int done, refused;
         if ("REFUSED".equals(vote)) {
@@ -47,7 +48,7 @@ public class GameSocketController {
             refused = last.getVotesRefused().get();
         }
 
-        int playerCount = room.getPlayers().size();
+        int playerCount = room.getPlayers().size() - 1; // exclude selected player
         boolean majorityRefused = refused > playerCount / 2.0;
         boolean majorityDone = done > playerCount / 2.0;
 
@@ -96,6 +97,19 @@ public class GameSocketController {
             boolean win = new Random().nextBoolean();
             messaging.convertAndSend("/topic/rooms/" + code,
                     WsEvent.of("DOUBLE_DOWN_RESULT", Map.of("win", win, "playerId", playerId)));
+        } else if (type == PowerUpType.REVENGE && targetId != null) {
+            if (!room.getHistory().isEmpty()) {
+                SpinResult last = room.getHistory().get(room.getHistory().size() - 1);
+                if (!last.isResolved() && last.getPlayer().getId().equals(playerId)) {
+                    Player target = room.getPlayers().get(targetId);
+                    if (target != null) {
+                        last.setPlayer(target);
+                        target.setTimesSelected(target.getTimesSelected() + 1);
+                        messaging.convertAndSend("/topic/rooms/" + code,
+                                WsEvent.of("SPIN_RESULT", last));
+                    }
+                }
+            }
         }
     }
 
@@ -107,6 +121,9 @@ public class GameSocketController {
         String rule = body.get("rule");
         String addedBy = body.get("addedBy");
         String playerId = body.get("playerId");
+
+        if (rule == null || rule.isBlank()) return;
+        if (addedBy == null) addedBy = "Unknown";
 
         room.getActiveRules().add(rule);
         Player rulePlayer = room.getPlayers().get(playerId);

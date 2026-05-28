@@ -189,12 +189,18 @@ onUnmounted(() => {
 })
 
 async function startGame() {
-  await fetch(`/api/rooms/${code}/start`, { method: 'POST' })
+  await fetch(`/api/rooms/${code}/start`, {
+    method: 'POST',
+    headers: { 'X-Host-Token': store.hostToken }
+  })
 }
 
 async function endGame() {
   if (!confirm('End the game and show stats?')) return
-  await fetch(`/api/rooms/${code}/end`, { method: 'POST' })
+  await fetch(`/api/rooms/${code}/end`, {
+    method: 'POST',
+    headers: { 'X-Host-Token': store.hostToken }
+  })
   router.push(`/stats/${code}`)
 }
 </script>
