@@ -17,8 +17,12 @@
               fill="white"
               :font-size="fontSize"
               font-family="Fredoka One, cursive"
+              font-weight="bold"
               text-anchor="middle"
               dominant-baseline="middle"
+              stroke="#00000066"
+              stroke-width="1.5"
+              paint-order="stroke"
             >{{ truncate(seg.label) }}</text>
           </g>
         </g>
@@ -57,8 +61,8 @@ const isAnimating = ref(false)
 const cx = computed(() => props.size / 2)
 const cy = computed(() => props.size / 2)
 const r = computed(() => props.size / 2 - 2)
-const hubR = computed(() => props.size * 0.1)
-const fontSize = computed(() => Math.max(10, props.size / 22))
+const hubR = computed(() => props.size * 0.09)
+const fontSize = computed(() => Math.max(12, props.size / 17))
 
 function segmentPath(index: number): string {
   const n = props.segments.length
@@ -77,14 +81,14 @@ function labelTransform(index: number): string {
   const n = props.segments.length
   const anglePerSeg = (2 * Math.PI) / n
   const midAngle = index * anglePerSeg - Math.PI / 2 + anglePerSeg / 2
-  const lx = cx.value + (r.value * 0.65) * Math.cos(midAngle)
-  const ly = cy.value + (r.value * 0.65) * Math.sin(midAngle)
+  const lx = cx.value + (r.value * 0.68) * Math.cos(midAngle)
+  const ly = cy.value + (r.value * 0.68) * Math.sin(midAngle)
   const deg = (midAngle * 180) / Math.PI + 90
   return `translate(${lx}, ${ly}) rotate(${deg})`
 }
 
 function truncate(s: string): string {
-  return s.length > 10 ? s.slice(0, 9) + '…' : s
+  return s.length > 13 ? s.slice(0, 12) + '…' : s
 }
 
 const wheelStyle = computed(() => ({

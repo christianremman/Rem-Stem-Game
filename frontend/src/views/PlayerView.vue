@@ -18,8 +18,21 @@
 
     <!-- ACTIVE: not selected -->
     <div v-else-if="store.gameState === 'ACTIVE' && !isSelectedPlayer" class="flex-1 flex flex-col gap-4">
+      <!-- Warning countdown banner -->
+      <transition name="fade">
+        <div v-if="store.warningCountdown !== null"
+             class="bg-wheel-orange border-4 border-black rounded-2xl p-4 text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div class="font-fredoka text-7xl text-white leading-none">
+            {{ store.warningCountdown === 0 ? '🎡' : store.warningCountdown }}
+          </div>
+          <div class="font-fredoka text-xl text-white mt-1">
+            {{ store.warningCountdown === 0 ? 'Spinning!' : 'Spin incoming!' }}
+          </div>
+        </div>
+      </transition>
+
       <!-- Countdown -->
-      <div class="bg-white border-4 border-black rounded-2xl p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center">
+      <div v-if="store.warningCountdown === null" class="bg-white border-4 border-black rounded-2xl p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center">
         <p class="font-fredoka text-xl mb-2">Next spin in</p>
         <CountdownBar
           :secondsRemaining="store.secondsUntilSpin"
@@ -120,7 +133,10 @@ onMounted(async () => {
   if (!res.ok) { router.push('/'); return }
   const data = await res.json()
   store.applyRoomState(data)
-  connect(code)
+  connect(code, async () => {
+    const r = await fetch(`/api/rooms/${code}`)
+    if (r.ok) store.applyRoomState(await r.json())
+  })
 })
 
 function submitVote(vote: string) {
@@ -140,3 +156,8 @@ function executeRevenge(targetId: string) {
   send(`/app/rooms/${code}/powerup`, { playerId: store.playerId, type: 'REVENGE', targetId })
 }
 </script>
+
+<style scoped>
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+</style>

@@ -39,12 +39,13 @@ public class RoomController {
             String name = body.get("name");
             if (name == null || name.isBlank()) return ResponseEntity.badRequest().build();
             Player player = roomService.join(code, name.trim());
-            Room room = roomService.find(code).orElseThrow();
             messaging.convertAndSend("/topic/rooms/" + code,
                     WsEvent.of("PLAYER_JOINED", Map.of("player", playerView(player))));
             return ResponseEntity.ok(Map.of("playerId", player.getId(), "playerName", player.getName()));
         } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).build();
         }
     }
 

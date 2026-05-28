@@ -97,6 +97,17 @@ class RoomControllerTest {
     }
 
     @Test
+    void joinRoom_returns409_whenRoomNotInLobby() throws Exception {
+        when(roomService.join("ABC123", "Alice"))
+                .thenThrow(new IllegalStateException("Room is not in lobby state"));
+
+        mockMvc.perform(post("/api/rooms/ABC123/players")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Alice\"}"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
     void joinRoom_returns404_whenRoomNotFound() throws Exception {
         when(roomService.join("XXXXXX", "Alice")).thenThrow(new NoSuchElementException());
 

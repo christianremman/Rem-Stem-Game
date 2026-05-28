@@ -3,18 +3,13 @@
        :class="{ 'brightness-90': store.isWarning }">
 
     <!-- Top bar -->
-    <div class="flex items-center justify-between px-6 py-3 bg-white border-b-4 border-black">
+    <div class="flex items-center justify-between px-6 py-2 bg-white border-b-4 border-black">
       <span class="font-fredoka text-2xl">🎡 Wheel Unfortunate</span>
       <div class="flex items-center gap-4">
-        <CountdownBar
-          :secondsRemaining="store.secondsUntilSpin"
-          :totalSeconds="store.config.spinIntervalMinutes * 60"
-          class="w-48"
-        />
-        <span class="font-fredoka text-xl tracking-widest">{{ code }}</span>
+        <span class="font-fredoka text-xl tracking-widest text-gray-500">{{ code }}</span>
         <button @click="muted = !muted" class="text-xl">{{ muted ? '🔇' : '🔊' }}</button>
         <button @click="showPlayers = !showPlayers" class="font-nunito text-sm border-2 border-black rounded-lg px-3 py-1">
-          👥 Players
+          👥 {{ store.players.length }}
         </button>
         <button v-if="store.gameState === 'LOBBY'" @click="startGame"
                 class="bg-wheel-green text-white font-fredoka px-5 py-2 rounded-xl border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
@@ -27,12 +22,22 @@
       </div>
     </div>
 
+    <!-- Countdown strip (active game only) -->
+    <div v-if="store.gameState === 'ACTIVE'" class="bg-white border-b-2 border-black px-6 py-2 flex items-center gap-4">
+      <span class="font-fredoka text-lg text-gray-600 shrink-0">Next spin</span>
+      <CountdownBar
+        :secondsRemaining="store.secondsUntilSpin"
+        :totalSeconds="store.config.spinIntervalMinutes * 60"
+        class="flex-1"
+      />
+    </div>
+
     <!-- Main area -->
     <div class="flex flex-1 overflow-hidden relative">
       <!-- Wheels area -->
       <div class="flex-1 flex items-center justify-around px-8">
-        <div class="flex flex-col items-center gap-3">
-          <span class="font-fredoka text-2xl">WHO</span>
+        <div class="flex flex-col items-center gap-4">
+          <span class="font-fredoka text-4xl tracking-wide">WHO</span>
           <SpinWheel
             :segments="playerSegments"
             :size="wheelSize"
@@ -40,8 +45,8 @@
             :target-angle="store.spinAngles.player"
           />
         </div>
-        <div class="flex flex-col items-center gap-3">
-          <span class="font-fredoka text-2xl">WHAT</span>
+        <div class="flex flex-col items-center gap-4">
+          <span class="font-fredoka text-4xl tracking-wide">WHAT</span>
           <SpinWheel
             :segments="challengeSegments"
             :size="wheelSize"
@@ -95,11 +100,19 @@
       </div>
     </transition>
 
-    <!-- Spin warning overlay -->
+    <!-- Spin warning countdown overlay -->
     <transition name="fade">
-      <div v-if="store.isWarning"
-           class="absolute inset-0 bg-black/20 z-20 flex items-center justify-center pointer-events-none">
-        <div class="font-fredoka text-9xl text-white drop-shadow-lg animate-bounce">⚡</div>
+      <div v-if="store.warningCountdown !== null"
+           class="absolute inset-0 bg-black/40 z-20 flex items-center justify-center pointer-events-none">
+        <div class="flex flex-col items-center gap-2">
+          <div class="font-fredoka text-white drop-shadow-2xl transition-all duration-300"
+               :style="{ fontSize: store.warningCountdown === 0 ? '10rem' : '14rem', lineHeight: 1 }">
+            {{ store.warningCountdown === 0 ? '🎡' : store.warningCountdown }}
+          </div>
+          <div class="font-fredoka text-3xl text-white/80 tracking-widest">
+            {{ store.warningCountdown === 0 ? 'SPINNING!' : 'GET READY' }}
+          </div>
+        </div>
       </div>
     </transition>
   </div>
@@ -137,7 +150,7 @@ const PLAYER_COLORS = ['#EF4444','#3B82F6','#22C55E','#F97316','#A855F7','#EC489
 
 const windowWidth = ref(window.innerWidth)
 const onResize = () => { windowWidth.value = window.innerWidth }
-const wheelSize = computed(() => Math.min(windowWidth.value / 2.6, 380))
+const wheelSize = computed(() => Math.min(windowWidth.value / 2.2, 520))
 
 const playerSegments = computed(() =>
   store.players.length
@@ -159,7 +172,10 @@ onMounted(async () => {
   if (!res.ok) { router.push('/'); return }
   const data = await res.json()
   store.applyRoomState(data)
-  connect(code)
+  connect(code, async () => {
+    const r = await fetch(`/api/rooms/${code}`)
+    if (r.ok) store.applyRoomState(await r.json())
+  })
 
   pingInterval = setInterval(async () => {
     const r = await fetch(`/api/rooms/${code}`)

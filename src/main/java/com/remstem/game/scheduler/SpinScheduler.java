@@ -93,7 +93,8 @@ public class SpinScheduler {
             list.add(executor.schedule(() -> {
                 Room room = roomService.find(roomCode).orElse(null);
                 if (room != null && room.getState() == GameState.ACTIVE) {
-                    broadcast(roomCode, WsEvent.of("SPIN_WARNING"));
+                    broadcast(roomCode, WsEvent.of("SPIN_WARNING",
+                            Map.of("secondsUntilSpin", warningSeconds)));
                 }
             }, warningMs, TimeUnit.MILLISECONDS));
         }

@@ -47,6 +47,7 @@ export const useGameStore = defineStore('game', () => {
   const secondsUntilSpin = ref<number | null>(null)
   const isSpinning = ref(false)
   const isWarning = ref(false)
+  const warningCountdown = ref<number | null>(null)
   const voteWindowOpen = ref(false)
   const voteResult = ref<{ completed: boolean; extraDrinks: number } | null>(null)
 
@@ -60,6 +61,46 @@ export const useGameStore = defineStore('game', () => {
     players.value = data.players
     activeRules.value = data.activeRules ?? []
     spinCount.value = data.spinCount ?? 0
+  }
+
+  let countdownTimer: ReturnType<typeof setInterval> | null = null
+  let warningTimer: ReturnType<typeof setInterval> | null = null
+
+  function startWarningCountdown(seconds: number) {
+    if (warningTimer !== null) { clearInterval(warningTimer); warningTimer = null }
+    warningCountdown.value = seconds
+    warningTimer = setInterval(() => {
+      if (warningCountdown.value !== null && warningCountdown.value > 0) {
+        warningCountdown.value--
+      } else {
+        clearInterval(warningTimer!)
+        warningTimer = null
+      }
+    }, 1000)
+  }
+
+  function stopWarningCountdown() {
+    if (warningTimer !== null) { clearInterval(warningTimer); warningTimer = null }
+    warningCountdown.value = null
+  }
+
+  function startCountdown(seconds: number) {
+    stopCountdown()
+    secondsUntilSpin.value = seconds
+    countdownTimer = setInterval(() => {
+      if (secondsUntilSpin.value !== null && secondsUntilSpin.value > 0) {
+        secondsUntilSpin.value--
+      } else {
+        stopCountdown()
+      }
+    }, 1000)
+  }
+
+  function stopCountdown() {
+    if (countdownTimer !== null) {
+      clearInterval(countdownTimer)
+      countdownTimer = null
+    }
   }
 
   function handleEvent(event: { type: string; payload: any }) {
@@ -78,18 +119,22 @@ export const useGameStore = defineStore('game', () => {
       case 'GAME_STARTED':
         gameState.value = 'ACTIVE'
         config.value = p.config
+        startCountdown(p.config.spinIntervalMinutes * 60)
         break
       case 'COUNTDOWN':
         secondsUntilSpin.value = p.secondsUntilSpin
         break
       case 'SPIN_WARNING':
         isWarning.value = true
+        startWarningCountdown(p?.secondsUntilSpin ?? 5)
         break
       case 'SPIN_STARTING':
         isSpinning.value = true
         isWarning.value = false
+        stopWarningCountdown()
         voteWindowOpen.value = false
         voteResult.value = null
+        stopCountdown()
         if (p) {
           spinAngles.value = { player: p.playerWheelAngle ?? 0, challenge: p.challengeWheelAngle ?? 0 }
         }
@@ -97,6 +142,7 @@ export const useGameStore = defineStore('game', () => {
       case 'SPIN_RESULT':
         currentSpin.value = p
         isSpinning.value = false
+        startCountdown(config.value.spinIntervalMinutes * 60)
         break
       case 'VOTE_WINDOW_OPEN':
         voteWindowOpen.value = true
@@ -118,6 +164,7 @@ export const useGameStore = defineStore('game', () => {
       case 'GAME_ENDED':
         gameState.value = 'ENDED'
         stats.value = p
+        stopCountdown()
         break
     }
   }
@@ -125,7 +172,7 @@ export const useGameStore = defineStore('game', () => {
   return {
     roomCode, hostToken, playerId, playerName, isHost,
     players, activeRules, config, gameState, spinCount,
-    currentSpin, spinAngles, secondsUntilSpin, isSpinning, isWarning,
+    currentSpin, spinAngles, secondsUntilSpin, isSpinning, isWarning, warningCountdown,
     voteWindowOpen, voteResult, stats, myPlayer,
     applyRoomState, handleEvent
   }

@@ -8,7 +8,7 @@ export function useWebSocket() {
   const connected = ref(false)
   let client: Client | null = null
 
-  function connect(roomCode: string) {
+  function connect(roomCode: string, onConnected?: () => void) {
     client = new Client({
       webSocketFactory: () => new SockJS('/ws'),
       reconnectDelay: 3000,
@@ -28,6 +28,7 @@ export function useWebSocket() {
             body: JSON.stringify({ playerId: store.playerId })
           })
         }
+        onConnected?.()
       },
       onDisconnect: () => {
         connected.value = false

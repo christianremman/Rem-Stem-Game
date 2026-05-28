@@ -1,11 +1,11 @@
 <template>
-  <div class="w-full h-4 bg-gray-200 rounded-full border-2 border-black overflow-hidden">
+  <div class="w-full h-5 bg-gray-200 rounded-full border-2 border-black overflow-hidden">
     <div class="h-full transition-all duration-1000"
          :class="barColor"
          :style="{ width: pct + '%' }">
     </div>
   </div>
-  <div class="text-center font-fredoka text-2xl mt-1 tabular-nums" :class="textColor">
+  <div class="text-center font-fredoka text-3xl mt-1 tabular-nums font-bold" :class="textColor">
     {{ displayTime }}
   </div>
 </template>
