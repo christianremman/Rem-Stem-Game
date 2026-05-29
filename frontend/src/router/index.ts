@@ -7,7 +7,8 @@ const router = createRouter({
     { path: '/', component: HomeView },
     { path: '/host/:code', component: () => import('../views/HostView.vue') },
     { path: '/play/:code', component: () => import('../views/PlayerView.vue') },
-    { path: '/stats/:code', component: () => import('../views/StatsView.vue') }
+    { path: '/stats/:code', component: () => import('../views/StatsView.vue') },
+    { path: '/date/:code', component: () => import('../views/DateView.vue') }
   ]
 })
 

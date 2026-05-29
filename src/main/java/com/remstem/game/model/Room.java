@@ -19,6 +19,7 @@ public class Room {
 
     private final AtomicInteger spinCount = new AtomicInteger(0);
     private final AtomicInteger joinCounter = new AtomicInteger(0);
+    private final AtomicInteger currentTurnIndex = new AtomicInteger(0);
 
     public Room(String code, String hostToken) {
         this.code = code;

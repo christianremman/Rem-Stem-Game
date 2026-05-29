@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
@@ -25,10 +26,18 @@ public class SpinService {
         ChallengeType.HOT_SEAT, ChallengeType.MOST_LIKELY_TO
     };
 
+    private static final ChallengeType[] ROMANTIC_TYPES = {
+        ChallengeType.PERSONAL_QUESTION, ChallengeType.PHYSICAL_TOUCH,
+        ChallengeType.ROMANTIC_DARE, ChallengeType.DRINK
+    };
+
     public SpinResult spin(Room room) {
+        if (room.getConfig().getGameMode() == GameMode.ROMANTIC) {
+            return spinRomantic(room);
+        }
         List<Player> players = room.getPlayerList();
         if (players.isEmpty()) throw new IllegalStateException("Cannot spin with no players in room");
-        int selectedIdx = new Random().nextInt(players.size());
+        int selectedIdx = ThreadLocalRandom.current().nextInt(players.size());
         Player selected = players.get(selectedIdx);
 
         Intensity intensity = room.getConfig().getIntensity();
@@ -49,12 +58,45 @@ public class SpinService {
         return result;
     }
 
+    private SpinResult spinRomantic(Room room) {
+        List<Player> players = room.getPlayerList();
+        if (players.isEmpty()) throw new IllegalStateException("Cannot spin with no players in room");
+
+        int idx = room.getCurrentTurnIndex().getAndIncrement() % players.size();
+        Player selected = players.get(idx);
+
+        ChallengeType type = ROMANTIC_TYPES[ThreadLocalRandom.current().nextInt(ROMANTIC_TYPES.length)];
+        Challenge challenge = buildRomanticChallenge(type);
+
+        double challengeAngle = angleForIndex(indexOf(ROMANTIC_TYPES, type), ROMANTIC_TYPES.length);
+        challenge.setWheelIndex(indexOf(ROMANTIC_TYPES, type));
+
+        int spinNumber = room.getSpinCount().incrementAndGet();
+        selected.setTimesSelected(selected.getTimesSelected() + 1);
+
+        SpinResult result = new SpinResult(selected, challenge, 0.0, challengeAngle, spinNumber);
+        room.getHistory().add(result);
+        return result;
+    }
+
+    private Challenge buildRomanticChallenge(ChallengeType type) {
+        if (type == ChallengeType.DRINK) {
+            Challenge c = new Challenge();
+            c.setType(ChallengeType.DRINK);
+            c.setSips(1);
+            c.setText("Take a sip together.");
+            c.setIntensity(Intensity.NORMAL);
+            return c;
+        }
+        return challengeService.random(type, Intensity.SAVAGE);
+    }
+
     private Challenge buildChallenge(ChallengeType type, Intensity intensity) {
         return switch (type) {
             case DRINK -> {
-                int sips = intensity == Intensity.SAVAGE ? (new Random().nextInt(3) + 3)
-                         : intensity == Intensity.CHILL  ? (new Random().nextInt(2) + 1)
-                         : (new Random().nextInt(3) + 2);
+                int sips = intensity == Intensity.SAVAGE ? (ThreadLocalRandom.current().nextInt(3) + 3)
+                         : intensity == Intensity.CHILL  ? (ThreadLocalRandom.current().nextInt(2) + 1)
+                         : (ThreadLocalRandom.current().nextInt(3) + 2);
                 Challenge c = new Challenge();
                 c.setType(ChallengeType.DRINK);
                 c.setSips(sips);
@@ -85,7 +127,7 @@ public class SpinService {
 
     private ChallengeType weightedRandom(int[] weights) {
         int total = Arrays.stream(weights).sum();
-        int roll = new Random().nextInt(total);
+        int roll = ThreadLocalRandom.current().nextInt(total);
         int cumulative = 0;
         for (int i = 0; i < weights.length; i++) {
             cumulative += weights[i];
@@ -96,7 +138,7 @@ public class SpinService {
 
     private double angleForIndex(int index, int total) {
         double segmentDeg = 360.0 / total;
-        double randomOffset = (new Random().nextDouble() - 0.5) * segmentDeg * 0.8;
+        double randomOffset = (ThreadLocalRandom.current().nextDouble() - 0.5) * segmentDeg * 0.8;
         return (index * segmentDeg + segmentDeg / 2.0 + randomOffset) % 360.0;
     }
 

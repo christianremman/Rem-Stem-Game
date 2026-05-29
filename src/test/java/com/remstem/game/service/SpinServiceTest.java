@@ -4,6 +4,8 @@ import com.remstem.game.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -144,6 +146,58 @@ class SpinServiceTest {
                 return;
             }
         }
+    }
+
+    @Test
+    void spin_romanticMode_onlyUsesRomanticChallengeTypes() {
+        when(challengeService.random(any(), any())).thenAnswer(inv -> {
+            Challenge c = new Challenge();
+            c.setType(inv.getArgument(0, ChallengeType.class));
+            c.setText("test");
+            c.setIntensity(Intensity.NORMAL);
+            return c;
+        });
+        Room room = new Room("TEST01", "token");
+        GameConfig config = new GameConfig();
+        config.setGameMode(GameMode.ROMANTIC);
+        room.setConfig(config);
+        Player alice = new Player("p1", "Alice"); alice.setJoinIndex(0);
+        Player bob   = new Player("p2", "Bob");   bob.setJoinIndex(1);
+        room.getPlayers().put("p1", alice);
+        room.getPlayers().put("p2", bob);
+
+        Set<ChallengeType> expected = Set.of(
+                ChallengeType.PERSONAL_QUESTION, ChallengeType.PHYSICAL_TOUCH,
+                ChallengeType.ROMANTIC_DARE, ChallengeType.DRINK);
+        for (int i = 0; i < 50; i++) {
+            assertThat(spinService.spin(room).getChallenge().getType()).isIn(expected);
+        }
+    }
+
+    @Test
+    void spin_romanticMode_alternatesTurns() {
+        when(challengeService.random(any(), any())).thenAnswer(inv -> {
+            Challenge c = new Challenge();
+            c.setType(inv.getArgument(0, ChallengeType.class));
+            c.setText("test");
+            c.setIntensity(Intensity.NORMAL);
+            return c;
+        });
+        Room room = new Room("TEST01", "token");
+        GameConfig config = new GameConfig();
+        config.setGameMode(GameMode.ROMANTIC);
+        room.setConfig(config);
+        Player alice = new Player("p1", "Alice"); alice.setJoinIndex(0);
+        Player bob   = new Player("p2", "Bob");   bob.setJoinIndex(1);
+        room.getPlayers().put("p1", alice);
+        room.getPlayers().put("p2", bob);
+
+        SpinResult r1 = spinService.spin(room);
+        SpinResult r2 = spinService.spin(room);
+        SpinResult r3 = spinService.spin(room);
+
+        assertThat(r1.getPlayer()).isNotEqualTo(r2.getPlayer());
+        assertThat(r1.getPlayer()).isEqualTo(r3.getPlayer());
     }
 
     @Test

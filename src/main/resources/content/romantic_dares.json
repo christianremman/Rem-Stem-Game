@@ -1,0 +1,15 @@
+[
+  {"text": "Tell them one thing you genuinely appreciate about them — something specific.", "intensity": "CHILL", "subtype": "LIGHT"},
+  {"text": "Write a 3-sentence note about why tonight matters and read it out loud.", "intensity": "CHILL", "subtype": "LIGHT"},
+  {"text": "Describe what you notice most when you look at them right now.", "intensity": "CHILL", "subtype": "LIGHT"},
+  {"text": "Give them a compliment they've probably never heard before.", "intensity": "CHILL", "subtype": "LIGHT"},
+  {"text": "Tell them your favorite thing about the way they laugh.", "intensity": "CHILL", "subtype": "LIGHT"},
+  {"text": "Describe your ideal future — 5 years from now — in 60 seconds.", "intensity": "NORMAL", "subtype": "MEDIUM"},
+  {"text": "Tell them the moment tonight when you felt most comfortable.", "intensity": "NORMAL", "subtype": "MEDIUM"},
+  {"text": "Say something you've been meaning to tell them but haven't yet.", "intensity": "NORMAL", "subtype": "MEDIUM"},
+  {"text": "Look them in the eyes and tell them one thing you find beautiful about them.", "intensity": "NORMAL", "subtype": "MEDIUM"},
+  {"text": "Tell them what you were thinking about on the way here.", "intensity": "NORMAL", "subtype": "MEDIUM"},
+  {"text": "Tell them one thing you want more of in this relationship (or in what this is becoming).", "intensity": "SAVAGE", "subtype": "BOLD"},
+  {"text": "Tell them what you'd want your first morning together to look like.", "intensity": "SAVAGE", "subtype": "BOLD"},
+  {"text": "Describe in detail what you'd plan for a perfect weekend away, just the two of you.", "intensity": "SAVAGE", "subtype": "BOLD"}
+]

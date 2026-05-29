@@ -6,4 +6,5 @@ import lombok.Data;
 public class GameConfig {
     private double spinIntervalMinutes = 15;
     private Intensity intensity = Intensity.NORMAL;
+    private GameMode gameMode = GameMode.PARTY;
 }

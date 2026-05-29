@@ -23,6 +23,9 @@ const typeEmoji = computed(() => ({
   DARE: '😈',
   CHALLENGE: '🎯',
   HOT_SEAT: '🔥',
-  MOST_LIKELY_TO: '👉'
+  MOST_LIKELY_TO: '👉',
+  PERSONAL_QUESTION: '💬',
+  PHYSICAL_TOUCH: '💋',
+  ROMANTIC_DARE: '🌹'
 }[props.challenge.type] ?? '🎡'))
 </script>
