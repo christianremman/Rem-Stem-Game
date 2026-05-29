@@ -30,6 +30,9 @@ public class ChallengeService {
         pool.put(ChallengeType.CHALLENGE, loadFile("content/challenges.json", ChallengeType.CHALLENGE));
         pool.put(ChallengeType.HOT_SEAT, loadFile("content/hotseat.json", ChallengeType.HOT_SEAT));
         pool.put(ChallengeType.MOST_LIKELY_TO, loadFile("content/mostlikelyto.json", ChallengeType.MOST_LIKELY_TO));
+        pool.put(ChallengeType.PERSONAL_QUESTION, loadFile("content/romantic_questions.json", ChallengeType.PERSONAL_QUESTION));
+        pool.put(ChallengeType.PHYSICAL_TOUCH, loadFile("content/physical_touch.json", ChallengeType.PHYSICAL_TOUCH));
+        pool.put(ChallengeType.ROMANTIC_DARE, loadFile("content/romantic_dares.json", ChallengeType.ROMANTIC_DARE));
     }
 
     private List<Challenge> loadFile(String path, ChallengeType type) throws Exception {

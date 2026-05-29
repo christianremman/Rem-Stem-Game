@@ -1,0 +1,19 @@
+[
+  {"text": "What's your idea of a perfect date?", "intensity": "CHILL", "subtype": "LIGHT"},
+  {"text": "What song always puts you in a good mood?", "intensity": "CHILL", "subtype": "LIGHT"},
+  {"text": "What's something small that always makes you smile?", "intensity": "CHILL", "subtype": "LIGHT"},
+  {"text": "What's your favorite memory from the past year?", "intensity": "CHILL", "subtype": "LIGHT"},
+  {"text": "What's one thing you've always wanted to try but haven't?", "intensity": "CHILL", "subtype": "LIGHT"},
+  {"text": "What do you find most attractive about the person across from you?", "intensity": "NORMAL", "subtype": "MEDIUM"},
+  {"text": "What's something about yourself you think I'd be surprised to know?", "intensity": "NORMAL", "subtype": "MEDIUM"},
+  {"text": "What does a great relationship look like to you?", "intensity": "NORMAL", "subtype": "MEDIUM"},
+  {"text": "What's the most romantic thing someone has ever done for you?", "intensity": "NORMAL", "subtype": "MEDIUM"},
+  {"text": "What's your love language?", "intensity": "NORMAL", "subtype": "MEDIUM"},
+  {"text": "When did you last feel truly understood by someone?", "intensity": "NORMAL", "subtype": "MEDIUM"},
+  {"text": "What's a dream you've never told most people about?", "intensity": "NORMAL", "subtype": "MEDIUM"},
+  {"text": "What's your biggest fear when it comes to relationships?", "intensity": "SAVAGE", "subtype": "DEEP"},
+  {"text": "What does love mean to you — right now, at this point in your life?", "intensity": "SAVAGE", "subtype": "DEEP"},
+  {"text": "Is there something you've been wanting to say but haven't found the right moment?", "intensity": "SAVAGE", "subtype": "DEEP"},
+  {"text": "What's one thing you wish people knew about who you really are?", "intensity": "SAVAGE", "subtype": "DEEP"},
+  {"text": "What would make this night memorable for you?", "intensity": "SAVAGE", "subtype": "DEEP"}
+]

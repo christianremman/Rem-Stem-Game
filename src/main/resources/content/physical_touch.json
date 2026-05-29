@@ -1,0 +1,16 @@
+[
+  {"text": "Hold hands for the rest of this round.", "intensity": "CHILL", "subtype": "LIGHT"},
+  {"text": "Give them a hug that lasts at least 10 seconds.", "intensity": "CHILL", "subtype": "LIGHT"},
+  {"text": "Kiss them on the cheek.", "intensity": "CHILL", "subtype": "LIGHT"},
+  {"text": "Hold eye contact without speaking for 30 seconds.", "intensity": "CHILL", "subtype": "LIGHT"},
+  {"text": "Gently fix something small about how they look.", "intensity": "CHILL", "subtype": "LIGHT"},
+  {"text": "Give them a 60-second shoulder or neck massage.", "intensity": "NORMAL", "subtype": "MEDIUM"},
+  {"text": "Hold their face in your hands for 10 seconds and say nothing.", "intensity": "NORMAL", "subtype": "MEDIUM"},
+  {"text": "Dance together for one full song — you pick the song.", "intensity": "NORMAL", "subtype": "MEDIUM"},
+  {"text": "Kiss their hand or forehead.", "intensity": "NORMAL", "subtype": "MEDIUM"},
+  {"text": "Lean against each other in silence for one full minute.", "intensity": "NORMAL", "subtype": "MEDIUM"},
+  {"text": "Kiss them — at least 5 seconds, no laughing.", "intensity": "SAVAGE", "subtype": "BOLD"},
+  {"text": "Whisper something in their ear and let them react.", "intensity": "SAVAGE", "subtype": "BOLD"},
+  {"text": "Kiss them somewhere unexpected — cheek, nose, hand, shoulder — their choice of where.", "intensity": "SAVAGE", "subtype": "BOLD"},
+  {"text": "Hold them close and slow dance, even if there's no music.", "intensity": "SAVAGE", "subtype": "BOLD"}
+]

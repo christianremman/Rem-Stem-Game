@@ -93,6 +93,27 @@ class ChallengeServiceTest {
     }
 
     @Test
+    void load_romanticQuestionsPool_notEmpty() {
+        Challenge c = service.random(ChallengeType.PERSONAL_QUESTION, Intensity.SAVAGE);
+        assertThat(c.getType()).isEqualTo(ChallengeType.PERSONAL_QUESTION);
+        assertThat(c.getText()).isNotBlank();
+    }
+
+    @Test
+    void load_physicalTouchPool_notEmpty() {
+        Challenge c = service.random(ChallengeType.PHYSICAL_TOUCH, Intensity.SAVAGE);
+        assertThat(c.getType()).isEqualTo(ChallengeType.PHYSICAL_TOUCH);
+        assertThat(c.getText()).isNotBlank();
+    }
+
+    @Test
+    void load_romanticDaresPool_notEmpty() {
+        Challenge c = service.random(ChallengeType.ROMANTIC_DARE, Intensity.SAVAGE);
+        assertThat(c.getType()).isEqualTo(ChallengeType.ROMANTIC_DARE);
+        assertThat(c.getText()).isNotBlank();
+    }
+
+    @Test
     void random_fallback_whenTypeHasNoPool_returnsTwoSipsFallback() {
         // DRINK / SOCIAL / GIVE_TAKE not in pool — service returns fallback
         Challenge fallback = service.random(ChallengeType.DRINK, Intensity.NORMAL);
