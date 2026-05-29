@@ -31,6 +31,7 @@ describe('SpinWheel', () => {
     await nextTick()
 
     const wheelGroup = wrapper.find('svg g')
+    // 5 full rotations + (360 - targetAngle=90) = 1800 + 270 = 2070
     expect(wheelGroup.attributes('style')).toContain('rotate(2070deg)')
     expect(wheelGroup.attributes('style')).toContain('transition: transform 4s')
 

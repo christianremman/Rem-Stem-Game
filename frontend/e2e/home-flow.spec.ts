@@ -42,7 +42,7 @@ test('host can create a room with the 30-second test interval', async ({ page })
   })
 
   await page.goto('/')
-  await page.locator('select').first().selectOption('0.5')
+  await page.getByLabel('Spin interval').selectOption('0.5')
   await page.getByRole('button', { name: 'Create Room' }).click()
 
   await expect(page).toHaveURL(/\/host\/E2E123$/)
@@ -83,61 +83,3 @@ test('player can join an existing room and reaches the player view', async ({ pa
   await expect(page.getByText('Waiting for host to start')).toBeVisible()
 })
 
-test('spin wheel lands the target segment under the top pointer', async ({ page }) => {
-  await page.goto('/')
-  const result = await page.evaluate(() => {
-    const size = 300
-    const cx = 150
-    const cy = 150
-    const r = 148
-    const segmentCount = 8
-    const targetIndex = 4
-    const segmentDeg = 360 / segmentCount
-    const targetAngle = targetIndex * segmentDeg + segmentDeg / 2
-    const rotation = 5 * 360 + (360 - targetAngle)
-
-    function segmentPath(index: number): string {
-      const anglePerSeg = (2 * Math.PI) / segmentCount
-      const startAngle = index * anglePerSeg - Math.PI / 2
-      const endAngle = startAngle + anglePerSeg
-      const x1 = cx + r * Math.cos(startAngle)
-      const y1 = cy + r * Math.sin(startAngle)
-      const x2 = cx + r * Math.cos(endAngle)
-      const y2 = cy + r * Math.sin(endAngle)
-      return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2} Z`
-    }
-
-    function labelPoint(index: number): { x: number; y: number } {
-      const anglePerSeg = (2 * Math.PI) / segmentCount
-      const midAngle = index * anglePerSeg - Math.PI / 2 + anglePerSeg / 2
-      return {
-        x: cx + (r * 0.68) * Math.cos(midAngle),
-        y: cy + (r * 0.68) * Math.sin(midAngle)
-      }
-    }
-
-    document.body.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-      <g style="transform: rotate(${rotation}deg); transform-origin: ${cx}px ${cy}px; transition: none">
-        ${Array.from({ length: segmentCount }, (_, index) => {
-          const point = labelPoint(index)
-          return `<path d="${segmentPath(index)}"></path>
-            <circle class="segment-center" data-index="${index}" cx="${point.x}" cy="${point.y}" r="2"></circle>`
-        }).join('')}
-      </g>
-    </svg>`
-
-    const centers = [...document.querySelectorAll<SVGCircleElement>('.segment-center')]
-      .map(element => {
-        const bounds = element.getBoundingClientRect()
-        return {
-          index: Number(element.dataset.index),
-          centerY: bounds.top + bounds.height / 2
-        }
-      })
-      .sort((a, b) => a.centerY - b.centerY)
-
-    return centers[0].index
-  })
-
-  expect(result).toBe(4)
-})

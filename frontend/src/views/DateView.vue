@@ -141,9 +141,11 @@ onMounted(async () => {
     turnName.value = store.players[0].name
   }
 
-  connect(code, async () => {
-    const r = await fetch(`/api/rooms/${code}`)
-    if (r.ok) store.applyRoomState(await r.json())
+  connect(code, () => {
+    fetch(`/api/rooms/${code}`)
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(data => store.applyRoomState(data))
+      .catch(err => console.error('DateView: state refresh failed', err))
   })
 
   pingInterval = setInterval(async () => {
